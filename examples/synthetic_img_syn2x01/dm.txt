@@ -1,0 +1,5 @@
+img_syn2x01 → Batch 2 (p=1.00 | B1 0.00 | B3 0.00) — confident, stability 100%
+  vs baseline: REJECT (9/16 KPIs > 2.5σ; rank-p 0.200 = floor)
+  why: pore correlation length 66.3 vs 45.4±2.27 (z +9.2); pore anisotropy 2.65 vs 1.83±0.092 (z +8.9); Si-candidate D50 7.40 vs 4.78±0.308 (z +8.5)
+  reads as: longer in-plane pore correlation length; pores more aligned parallel to the collector
+  novelty: no (in-distribution score 0.08); more extreme than any labelled Batch 2 image, same direction

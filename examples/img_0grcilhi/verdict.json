@@ -1,0 +1,827 @@
+{
+ "sample_id": "img_0grcilhi",
+ "true_batch_if_known": "3",
+ "baseline": {
+  "batch": 3,
+  "n_images": 1,
+  "version": "97625928"
+ },
+ "acquisition_gates": {
+  "status": "ok",
+  "flags": [
+   "shading_flag"
+  ],
+  "z": {
+   "n_grey_levels_bse": 0.0,
+   "comb_step_bse": 0.0,
+   "noise_sd_bse": 0.0,
+   "blur_bse": 0.0,
+   "sat0_bse": 0.0,
+   "sat255_bse": 0.0,
+   "sat0_etd": 0.0,
+   "sat255_etd": 0.0,
+   "sat0_inlens": 0.0,
+   "sat255_inlens": 0.0,
+   "bse_c_med": 0.0,
+   "etd_c_med": 0.0,
+   "inlens_c_med": 0.0,
+   "bse_si_med": 0.0,
+   "etd_si_med": 0.0,
+   "inlens_si_med": 0.0,
+   "bse_row_gradient_pct": 0.0,
+   "t1": 0.0,
+   "t2": 0.0,
+   "reg_shift_etd_px": 0.0,
+   "reg_shift_inlens_px": 0.0,
+   "height_px": 0.0,
+   "px_nm": 0.0,
+   "masked_rows": 0.0
+  },
+  "values": {
+   "n_grey_levels_bse": 177,
+   "comb_step_bse": 1.0,
+   "noise_sd_bse": 10.026877403259277,
+   "blur_bse": 0.22077895470557682,
+   "bse_row_gradient_pct": 17.9827800282516,
+   "t1": 38.242759704589844,
+   "t2": 81.63880157470703,
+   "height_px": 1904,
+   "px_nm": 25.000548043509866,
+   "masked_rows": 0,
+   "shading_flag": true,
+   "sat0_bse": 0.016059960709062134,
+   "sat255_bse": 0.0,
+   "bse_c_med": 58.0,
+   "bse_si_med": 115.0,
+   "sat0_etd": 0.024758199221386182,
+   "sat255_etd": 2.6343060802486186e-05,
+   "etd_c_med": 71.0,
+   "etd_si_med": 119.0,
+   "sat0_inlens": 0.011121950209063335,
+   "sat255_inlens": 0.03913385517110531,
+   "inlens_c_med": 71.0,
+   "inlens_si_med": 156.0,
+   "reg_shift_etd_px": 0.20000000298023224,
+   "reg_shift_inlens_px": 0.10000000149011612,
+   "gate_flags": "shading_flag"
+  }
+ },
+ "verdict_vs_baseline": {
+  "decision": "ACCEPT",
+  "reasons": [],
+  "aggregate_score_S": 0.0,
+  "conformal_rank_p": null,
+  "p_floor": 0.5,
+  "n_kpis_beyond_2_5": 0,
+  "defect_alarms": [],
+  "drivers": [
+   {
+    "kpi": "si_frac_solid",
+    "value": 0.0629136334516458,
+    "baseline_median": 0.0629136334516458,
+    "baseline_scale": 0.010209242654310875,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "M",
+    "unit": "fraction",
+    "meaning": "less Si-candidate in the solid: lower capacity, less swelling"
+   },
+   {
+    "kpi": "si_d50_aw_um",
+    "value": 3.3482450753964295,
+    "baseline_median": 3.3482450753964295,
+    "baseline_scale": 0.34857196979867805,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "R",
+    "unit": "um",
+    "meaning": "finer Si-candidate: more surface/SEI, less fracture"
+   },
+   {
+    "kpi": "si_d90_aw_um",
+    "value": 6.086762075149372,
+    "baseline_median": 6.086762075149372,
+    "baseline_scale": 0.5372066679631766,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "R",
+    "unit": "um",
+    "meaning": "fewer coarse Si-candidate particles"
+   },
+   {
+    "kpi": "si_num_density_mm2",
+    "value": 23054.796247725582,
+    "baseline_median": 23054.796247725582,
+    "baseline_scale": 1816.776269511972,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "M",
+    "unit": "mm^-2",
+    "meaning": "fewer Si-candidate particles per area (coarser or less loaded)"
+   },
+   {
+    "kpi": "si_solidity_med",
+    "value": 0.8824451410658307,
+    "baseline_median": 0.8824451410658307,
+    "baseline_scale": 0.044122257053291536,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "R",
+    "unit": "ratio",
+    "meaning": "more irregular/porous Si-candidate shapes (grade change?)"
+   },
+   {
+    "kpi": "si_quadrat_cv",
+    "value": 0.8565908572416041,
+    "baseline_median": 0.8565908572416041,
+    "baseline_scale": 0.11306162921774555,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "M",
+    "unit": "ratio",
+    "meaning": "Si-candidate more evenly distributed"
+   },
+   {
+    "kpi": "pore_frac_deep",
+    "value": 0.16143222793547257,
+    "baseline_median": 0.16143222793547257,
+    "baseline_scale": 0.009946584449241904,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "W",
+    "unit": "fraction",
+    "meaning": "less deep porosity (lower bound): denser coating, slower ionic transport; consistent with heavier calendering"
+   },
+   {
+    "kpi": "pore_chord_h_mean_um",
+    "value": 0.8978991508483887,
+    "baseline_median": 0.8978991508483887,
+    "baseline_scale": 0.06311311217217583,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "R",
+    "unit": "um",
+    "meaning": "narrower in-plane pores; consistent with heavier calendering"
+   },
+   {
+    "kpi": "pore_chord_v_mean_um",
+    "value": 0.7376817464828491,
+    "baseline_median": 0.7376817464828491,
+    "baseline_scale": 0.06491679242267825,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "R",
+    "unit": "um",
+    "meaning": "flatter through-plane pores: more tortuous transport; consistent with heavier calendering"
+   },
+   {
+    "kpi": "aniso_pore_chord_ratio",
+    "value": 1.2171903848648071,
+    "baseline_median": 1.2171903848648071,
+    "baseline_scale": 0.06085951924324036,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "R",
+    "unit": "ratio",
+    "meaning": "pores less aligned: lower through-plane tortuosity"
+   },
+   {
+    "kpi": "aniso_carbon_chord_ratio",
+    "value": 1.1971840858459473,
+    "baseline_median": 1.1971840858459473,
+    "baseline_scale": 0.059859204292297366,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "R",
+    "unit": "ratio",
+    "meaning": "carbon matrix less aligned"
+   },
+   {
+    "kpi": "s2_len_pore_h_px",
+    "value": 53.210486971206606,
+    "baseline_median": 53.210486971206606,
+    "baseline_scale": 5.1578442706268195,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "R",
+    "unit": "px",
+    "meaning": "shorter in-plane pore correlation length: finer, less stretched pore network"
+   },
+   {
+    "kpi": "pore_percolating_frac_v",
+    "value": 0.0,
+    "baseline_median": 0.0,
+    "baseline_scale": 0.005,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "M",
+    "unit": "fraction",
+    "meaning": "fewer through-plane connected deep pores: transport bottleneck, plating risk"
+   },
+   {
+    "kpi": "si_contact_pore_frac",
+    "value": 0.012658481986006404,
+    "baseline_median": 0.012658481986006404,
+    "baseline_scale": 0.005,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "R",
+    "unit": "fraction",
+    "meaning": "less buffer space around Si-candidate: swelling stresses the matrix"
+   },
+   {
+    "kpi": "si_contact_carbon_frac",
+    "value": 0.9873415180139936,
+    "baseline_median": 0.9873415180139936,
+    "baseline_scale": 0.049367075900699685,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "R",
+    "unit": "fraction",
+    "meaning": "Si-candidate less wired to carbon: risk of electronic isolation"
+   },
+   {
+    "kpi": "crack_density_um_per_mm2",
+    "value": 2485.6497090310636,
+    "baseline_median": 2485.6497090310636,
+    "baseline_scale": 681.3333288254953,
+    "z": 0.0,
+    "direction": "lower",
+    "robustness": "M",
+    "unit": "um/mm^2",
+    "meaning": "fewer cracks"
+   }
+  ]
+ },
+ "batch_assignment": {
+  "assigned_batch": "3",
+  "probabilities": {
+   "3": 1.0
+  },
+  "distances": {
+   "3": 0.0
+  },
+  "stability": 1.0,
+  "strip_agreement": 1.0,
+  "confidence_label": "confident",
+  "novelty_flag": false,
+  "in_distribution_score": null,
+  "signature_match": {},
+  "signature_kpis_matched": {},
+  "signature_kpis_missed": {},
+  "beyond_labelled_range": false,
+  "priors": "uniform",
+  "calibration_note": "T=2.0 and shrinkage \u0394=0.0 chosen by leave-one-image-out log-loss on 1 labelled images; LOIO accuracy 0.00",
+  "classes_without_training_images": [
+   "1",
+   "2"
+  ]
+ },
+ "kpis": {
+  "si_frac_solid": {
+   "value": 0.0629136334516458,
+   "se": 0.010209242654310875,
+   "ci95": [
+    0.04626239190126764,
+    0.07960101000439349
+   ],
+   "z": 0.0,
+   "unit": "fraction",
+   "robustness": "M",
+   "shortlist": true
+  },
+  "si_frac_total": {
+   "value": 0.052757345436030945,
+   "se": 0.008607563960701111,
+   "ci95": [
+    0.038562085645552004,
+    0.0669566327066924
+   ],
+   "z": 0.0,
+   "unit": "fraction",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "si_d50_aw_um": {
+   "value": 3.3482450753964295,
+   "se": 0.34857196979867805,
+   "ci95": [
+    2.4925109866492425,
+    3.6930520797478352
+   ],
+   "z": 0.0,
+   "unit": "um",
+   "robustness": "R",
+   "shortlist": true
+  },
+  "si_d90_aw_um": {
+   "value": 6.086762075149372,
+   "se": 0.5372066679631766,
+   "ci95": [
+    4.000012389199835,
+    5.7905787344179505
+   ],
+   "z": 0.0,
+   "unit": "um",
+   "robustness": "R",
+   "shortlist": true
+  },
+  "si_d10_aw_um": {
+   "value": 1.3499357486939974,
+   "se": 0.14594342312447298,
+   "ci95": [
+    1.1210489300212798,
+    1.6276238989826943
+   ],
+   "z": 0.0,
+   "unit": "um",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "si_span": {
+   "value": 1.414719119954067,
+   "se": 0.1363225895070321,
+   "ci95": [
+    1.0165545231198914,
+    1.4512725235860608
+   ],
+   "z": 0.0,
+   "unit": "ratio",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "si_num_density_mm2": {
+   "value": 23054.796247725582,
+   "se": 1816.776269511972,
+   "ci95": [
+    20533.489326211486,
+    26907.946301178676
+   ],
+   "z": 0.0,
+   "unit": "mm^-2",
+   "robustness": "M",
+   "shortlist": true
+  },
+  "si_solidity_med": {
+   "value": 0.8824451410658307,
+   "se": 0.019268665083112597,
+   "ci95": [
+    0.8311810987771391,
+    0.8950978300318602
+   ],
+   "z": 0.0,
+   "unit": "ratio",
+   "robustness": "R",
+   "shortlist": true
+  },
+  "si_aspect_med": {
+   "value": 1.7647165332332457,
+   "se": 0.06008208488593456,
+   "ci95": [
+    1.7283630690447631,
+    1.932551648781232
+   ],
+   "z": 0.0,
+   "unit": "ratio",
+   "robustness": "R",
+   "shortlist": false
+  },
+  "si_circularity_med": {
+   "value": 0.5989707462230685,
+   "se": 0.03440689935461791,
+   "ci95": [
+    0.5084667307020767,
+    0.6292404417960755
+   ],
+   "z": 0.0,
+   "unit": "ratio",
+   "robustness": "R",
+   "shortlist": false
+  },
+  "si_interior_texture": {
+   "value": 0.7828368248473146,
+   "se": 0.027811931086378396,
+   "ci95": [
+    0.7271843942815768,
+    0.8233569837284461
+   ],
+   "z": 0.0,
+   "unit": "ratio",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "si_quadrat_cv": {
+   "value": 0.8565908572416041,
+   "se": 0.11306162921774555,
+   "ci95": [
+    0.5038777092280115,
+    0.8727554780125322
+   ],
+   "z": 0.0,
+   "unit": "ratio",
+   "robustness": "M",
+   "shortlist": true
+  },
+  "si_clark_evans_R": {
+   "value": 0.8325744635450817,
+   "se": 0.06568380776898139,
+   "ci95": [
+    0.7461726945355294,
+    0.9677574916017022
+   ],
+   "z": 0.0,
+   "unit": "ratio",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "si_agglomerate_frac": {
+   "value": 0.8983886775955034,
+   "se": 0.032580557953662694,
+   "ci95": [
+    0.8227254380589214,
+    0.9309800876396116
+   ],
+   "z": 0.0,
+   "unit": "fraction",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "pore_frac_deep": {
+   "value": 0.16143222793547257,
+   "se": 0.009946584449241904,
+   "ci95": [
+    0.14166581450307072,
+    0.17801437819588165
+   ],
+   "z": 0.0,
+   "unit": "fraction",
+   "robustness": "W",
+   "shortlist": true
+  },
+  "pore_frac_slope_per_level": {
+   "value": 0.004182254853927855,
+   "se": null,
+   "ci95": [
+    null,
+    null
+   ],
+   "z": 0.0,
+   "unit": "1/level",
+   "robustness": "W",
+   "shortlist": false
+  },
+  "ambiguous_frac": {
+   "value": 0.00971105790129713,
+   "se": 0.0005117427393621389,
+   "ci95": [
+    0.008713535735952708,
+    0.010437304407109521
+   ],
+   "z": 0.0,
+   "unit": "fraction",
+   "robustness": "W",
+   "shortlist": false
+  },
+  "pore_chord_h_mean_um": {
+   "value": 0.8978991508483887,
+   "se": 0.06311311217217583,
+   "ci95": [
+    0.7459835430979729,
+    0.9657974243164062
+   ],
+   "z": 0.0,
+   "unit": "um",
+   "robustness": "R",
+   "shortlist": true
+  },
+  "pore_chord_v_mean_um": {
+   "value": 0.7376817464828491,
+   "se": 0.06491679242267825,
+   "ci95": [
+    0.6195038080215454,
+    0.8547448515892029
+   ],
+   "z": 0.0,
+   "unit": "um",
+   "robustness": "R",
+   "shortlist": true
+  },
+  "pore_chord_h_p90_um": {
+   "value": 2.225048780441284,
+   "se": 0.23500516148324072,
+   "ci95": [
+    1.7346630561351775,
+    2.5750565052032472
+   ],
+   "z": 0.0,
+   "unit": "um",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "pore_lt_d50_um": {
+   "value": 1.0918184801511417,
+   "se": 0.15110680157936196,
+   "ci95": [
+    0.8366188319856309,
+    1.3607396456953755
+   ],
+   "z": 0.0,
+   "unit": "um",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "aniso_pore_chord_ratio": {
+   "value": 1.2171903848648071,
+   "se": 0.020669720298872808,
+   "ci95": [
+    1.1244736194610596,
+    1.1997018814086915
+   ],
+   "z": 0.0,
+   "unit": "ratio",
+   "robustness": "R",
+   "shortlist": true
+  },
+  "aniso_carbon_chord_ratio": {
+   "value": 1.1971840858459473,
+   "se": 0.012193871246624952,
+   "ci95": [
+    0.9071078896522522,
+    0.9478907942771911
+   ],
+   "z": 0.0,
+   "unit": "ratio",
+   "robustness": "R",
+   "shortlist": true
+  },
+  "st_coherence": {
+   "value": 0.1327989949167425,
+   "se": 0.008782209206058848,
+   "ci95": [
+    0.12412649091212771,
+    0.15474940581350363
+   ],
+   "z": 0.0,
+   "unit": "ratio",
+   "robustness": "R",
+   "shortlist": false
+  },
+  "st_orientation_deg": {
+   "value": 9.727555971959362,
+   "se": 4.516698818201769,
+   "ci95": [
+    2.1065668309521812,
+    17.62384223637882
+   ],
+   "z": 0.0,
+   "unit": "deg",
+   "robustness": "R",
+   "shortlist": false
+  },
+  "s2_len_pore_h_px": {
+   "value": 53.210486971206606,
+   "se": 5.1578442706268195,
+   "ci95": [
+    41.953567861746066,
+    59.501535757699244
+   ],
+   "z": 0.0,
+   "unit": "px",
+   "robustness": "R",
+   "shortlist": true
+  },
+  "s2_len_pore_v_px": {
+   "value": 29.8419743307246,
+   "se": 3.2530177439931474,
+   "ci95": [
+    23.807986816579323,
+    34.98449493408084
+   ],
+   "z": 0.0,
+   "unit": "px",
+   "robustness": "R",
+   "shortlist": false
+  },
+  "s2_len_si_px": {
+   "value": 66.18903547015684,
+   "se": 6.009795709802406,
+   "ci95": [
+    50.95068998422651,
+    70.8255978500304
+   ],
+   "z": 0.0,
+   "unit": "px",
+   "robustness": "R",
+   "shortlist": false
+  },
+  "s2_integral_range_pore_px2": {
+   "value": 15827.839432568453,
+   "se": 2949.4061417581383,
+   "ci95": [
+    8895.613048690484,
+    19028.247909064652
+   ],
+   "z": 0.0,
+   "unit": "px^2",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "pore_percolating_frac_v": {
+   "value": 0.0,
+   "se": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ],
+   "z": 0.0,
+   "unit": "fraction",
+   "robustness": "M",
+   "shortlist": true
+  },
+  "pore_percolating_frac_h": {
+   "value": 0.0,
+   "se": 0.10241151548599312,
+   "ci95": [
+    0.0,
+    0.3579192270369615
+   ],
+   "z": 0.0,
+   "unit": "fraction",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "pore_euler_density_mm2": {
+   "value": 78530.39971881527,
+   "se": 16186.11560044634,
+   "ci95": [
+    58593.22103685094,
+    112539.52606436508
+   ],
+   "z": 0.0,
+   "unit": "mm^-2",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "interface_pore_solid_um_per_um2": {
+   "value": 0.6237217222861189,
+   "se": 0.020760791850059097,
+   "ci95": [
+    0.5941726520719837,
+    0.6658497863619489
+   ],
+   "z": 0.0,
+   "unit": "um^-1",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "si_contact_pore_frac": {
+   "value": 0.012658481986006404,
+   "se": 0.0016800606634511136,
+   "ci95": [
+    0.00935753714736858,
+    0.015175471171231362
+   ],
+   "z": 0.0,
+   "unit": "fraction",
+   "robustness": "R",
+   "shortlist": true
+  },
+  "si_contact_carbon_frac": {
+   "value": 0.9873415180139936,
+   "se": 0.0016800606634511277,
+   "ci95": [
+    0.9848245288287687,
+    0.9906424628526314
+   ],
+   "z": 0.0,
+   "unit": "fraction",
+   "robustness": "R",
+   "shortlist": true
+  },
+  "crack_density_um_per_mm2": {
+   "value": 2485.6497090310636,
+   "se": 681.3333288254953,
+   "ci95": [
+    1092.7948727811468,
+    3601.74347370183
+   ],
+   "z": 0.0,
+   "unit": "um/mm^2",
+   "robustness": "M",
+   "shortlist": true
+  },
+  "largest_void_ecd_um": {
+   "value": 18.68611821844488,
+   "se": 1.354282290954005,
+   "ci95": [
+    7.256550545549183,
+    11.923501902669878
+   ],
+   "z": 0.0,
+   "unit": "um",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "hiZ_inclusion_count_mm2": {
+   "value": 0.0,
+   "se": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ],
+   "z": 0.0,
+   "unit": "mm^-2",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "vertical_pore_slope": {
+   "value": 1.576871956414154,
+   "se": 1.0056340109604702,
+   "ci95": [
+    0.168137547114331,
+    3.527406635295126
+   ],
+   "z": 0.0,
+   "unit": "pp/10um",
+   "robustness": "W",
+   "shortlist": false
+  },
+  "vertical_si_slope": {
+   "value": -1.6906919951779478,
+   "se": 0.6042660764065082,
+   "ci95": [
+    -2.7229477091690564,
+    -0.7130614541981662
+   ],
+   "z": 0.0,
+   "unit": "pp/10um",
+   "robustness": "W",
+   "shortlist": false
+  },
+  "si_frac_se_imagerep": {
+   "value": 0.010748443280659782,
+   "se": 0.003083198011776581,
+   "ci95": [
+    0.013411803038817813,
+    0.024494555414041816
+   ],
+   "z": 0.0,
+   "unit": "fraction",
+   "robustness": "R",
+   "shortlist": false
+  },
+  "pore_frac_se_imagerep": {
+   "value": 0.012680753501703449,
+   "se": 0.0033256891872148584,
+   "ci95": [
+    0.02034338462403811,
+    0.032007869007872954
+   ],
+   "z": 0.0,
+   "unit": "fraction",
+   "robustness": "R",
+   "shortlist": false
+  }
+ },
+ "image": {
+  "shape_px": [
+   1904,
+   6998
+  ],
+  "px_nm": 25.000548043509866,
+  "flags": [
+   "dropped_rgb_mismatch_cols:2"
+  ],
+  "crop": {
+   "top": 0,
+   "bottom": 0,
+   "left": 0,
+   "right": 2,
+   "band_top": 0,
+   "band_bottom": 0
+  },
+  "etd_is_se": false
+ },
+ "not_measurable": [
+  "coating thickness",
+  "surface roughness",
+  "collector delamination",
+  "binder/carbon-black distribution",
+  "Si vs SiOx identity",
+  "true (total) porosity"
+ ],
+ "caveats": [
+  "Bright particles are identified by backscatter Z-contrast only (no EDS); they are reported as Si-candidates and may include SiOx or Si-C composite.",
+  "Pores appear open (not resin-infiltrated); the deep-pore fraction is a lower bound on porosity, not a porosity measurement.",
+  "Graphite, carbon black and binder cannot be separated in these images; the 'carbon matrix' class contains all three.",
+  "Coating thickness, surface roughness and collector delamination are not assessable: the fields lie entirely inside the coating.",
+  "Anisotropy and transport indices are 2-D section quantities compared like-with-like against the baseline, not 3-D values; the through-plane direction is assumed vertical in the frame.",
+  "Pixel size (25 nm/px) is taken from the TIFF resolution tags; vendor metadata is absent, so it is unverified.",
+  "With N baseline images the smallest achievable rank p-value is 1/(N+1); verdicts are effect-size judgements against a small baseline.",
+  "Image grey levels have been remapped after acquisition (comb histograms); any method relying on raw intensities would be confounded - this system uses BSE phase identity after smoothing and treats ETD/InLens levels as acquisition covariates."
+ ],
+ "runtime_s": 0.0,
+ "notes": [
+  "sample is the only baseline image, so it is compared with itself: the verdict and assignment are a pipeline check only, not evidence"
+ ]
+}

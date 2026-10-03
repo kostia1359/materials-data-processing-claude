@@ -1,0 +1,5 @@
+img_0grcilhi → Batch 3 (p=1.00 | no other batch trained) — confident, stability 100%
+  vs baseline: ACCEPT (0/16 KPIs > 2.5σ; rank-p n/a)
+  why: Si-candidate loading 6.29 % vs 6.29 %±1.02 % (z +0.0); Si-candidate D50 3.35 vs 3.35±0.349 (z +0.0); Si-candidate D90 6.09 vs 6.09±0.537 (z +0.0)
+  reads as: no material shift beyond 2σ
+  novelty: n/a
