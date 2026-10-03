@@ -1,0 +1,44 @@
+# All tunable parameters. Defaults follow the coding brief (Appendix A); changes are logged in DECISIONS.md.
+px_nm_target: 25.0
+px_nm_default: 25.0
+resample_tolerance: 0.02
+smoothing_sigma_px: 1.5
+otsu_classes: 3
+pore_hysteresis_levels: 6
+pore_etd_percentile: 10
+pore_min_px: 20
+si_opening_radius_px: 1
+si_min_px_count: 100
+si_min_px_size: 500
+si_interior_margin_levels: 10
+si_watershed_h: 2
+strips: 5
+strip_width_px: 1400
+quadrat_px: 700
+structure_tensor_sigma_px: 8
+crack_sato_sigmas: [1, 2, 3]
+crack_min_length_px: 80
+crack_max_width_px: 6
+crack_threshold_default_quantile: 99.5
+curtaining_exclusion_deg: 10
+curtaining_search_deg: [50, 80]
+curtaining_min_strength: 3.0   # peak/median angular Fourier power needed to call curtaining present
+hiz_threshold: 190
+hiz_min_px: 50
+edge_band_max_frac: 0.10
+edge_band_inlens_ratio: 0.6
+edge_band_etd_var_ratio: 2.0
+registration_flag_px: 2.0
+shading_flag_levels: 6
+scale_rel_floor: 0.05
+zones: {investigate: 2.5, reject: 4.0, multi_count_z: 2.5, multi_count_n: 3, investigate_count_z: 2.0, investigate_count_n: 2}
+gate_caution_z: 4.0
+signature_min_effect: 1.5
+signature_min_stability: 0.8
+shrinkage_grid: [0, 0.25, 0.5, 1.0]
+temperature_grid: [0.5, 1, 2, 4, 8]
+bootstrap_n: 1000
+seed: 0
+weights: {R: 1.0, M: 0.7, W: 0.4}
+validation_sensitivity_samples_per_batch: 1
+manual_masks: {}   # sample_id: {top: rows, bottom: rows, left: cols, right: cols}

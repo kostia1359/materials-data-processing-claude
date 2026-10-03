@@ -1,0 +1,20 @@
+[project]
+name = "anode-qc"
+version = "0.1.0"
+description = "Interpretable SEM batch-QC for Si-graphite anode cross-sections"
+requires-python = ">=3.11"
+dependencies = ["numpy", "scipy", "scikit-image>=0.24", "tifffile", "imagecodecs", "pandas", "scikit-learn",
+                "matplotlib", "pyyaml", "typer", "tabulate"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[project.scripts]
+qc = "qc.cli:main"
+
+[tool.setuptools]
+packages = ["qc", "qc.kpis"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::FutureWarning", "ignore::RuntimeWarning", "ignore::DeprecationWarning"]
