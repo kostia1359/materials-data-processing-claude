@@ -31,6 +31,7 @@ edge_band_etd_var_ratio: 2.0
 registration_flag_px: 2.0
 shading_flag_levels: 6
 scale_rel_floor: 0.05
+scale_abs_floor: {fraction: 0.005}   # 0.5 pp: stops near-zero fractions (e.g. 2-D percolation = 0) giving huge z
 zones: {investigate: 2.5, reject: 4.0, multi_count_z: 2.5, multi_count_n: 3, investigate_count_z: 2.0, investigate_count_n: 2}
 gate_caution_z: 4.0
 signature_min_effect: 1.5

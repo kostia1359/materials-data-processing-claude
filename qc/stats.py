@@ -16,7 +16,7 @@ def baseline_version(ids) -> str:
     return hashlib.sha1(",".join(sorted(ids)).encode()).hexdigest()[:8]
 
 
-def robust_stats(values: np.ndarray, within_se: np.ndarray | None, rel_floor: float) -> dict:
+def robust_stats(values: np.ndarray, within_se: np.ndarray | None, rel_floor: float, abs_floor: float = 0.0) -> dict:
     v = np.asarray(values, float)
     v = v[np.isfinite(v)]
     if len(v) == 0:
@@ -24,7 +24,7 @@ def robust_stats(values: np.ndarray, within_se: np.ndarray | None, rel_floor: fl
     med = float(np.median(v))
     mad = float(1.4826 * np.median(np.abs(v - med)))
     wse = float(np.nanmedian(within_se)) if within_se is not None and np.isfinite(within_se).any() else 0.0
-    scale = max(mad, wse, rel_floor * abs(med))
+    scale = max(mad, wse, rel_floor * abs(med), abs_floor)
     if scale <= 0:
         scale = 1e-9
     return dict(n=int(len(v)), med=med, mad=mad, within_se=wse, scale=float(scale), min=float(v.min()), max=float(v.max()))
@@ -40,7 +40,8 @@ def baseline_stats(kpis: pd.DataFrame, cfg: dict, exclude: str | None = None) ->
         if k not in base:
             continue
         se = base[f"{k}_se"].to_numpy(float) if f"{k}_se" in base else None
-        out["kpi"][k] = robust_stats(base[k].to_numpy(float), se, cfg["scale_rel_floor"])
+        floor = float((cfg.get("scale_abs_floor") or {}).get(unit(k), 0.0))
+        out["kpi"][k] = robust_stats(base[k].to_numpy(float), se, cfg["scale_rel_floor"], floor)
     for k in GATE_KEYS:
         if k in base:
             out["gate"][k] = robust_stats(base[k].to_numpy(float), None, cfg["scale_rel_floor"])
