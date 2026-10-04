@@ -89,7 +89,7 @@ def build_baseline(data: Path, out: Path, cfg: dict, log=print, workers=None) ->
     man = manifest_frame(samples, cfg)
     man.to_csv(out / "manifest.csv", index=False)
     log(f"{len(samples)} samples: " + ", ".join(f"batch {b}: {n}" for b, n in man["batch"].value_counts().sort_index().items()))
-    cache = out / "samples"
+    cache = out / "cache"
     results = analyze_all(samples, cfg, cache, workers, log)
     thr = crack_threshold_from(results)
     for r in results:
@@ -136,7 +136,7 @@ def evaluate_files(files: SampleFiles, base: dict, cfg: dict, report_dir: Path |
     t0 = time.time()
     st, model = base["stats"], base["model"]
     out = Path(base["out"])
-    cache = out / "samples"
+    cache = out / "cache"
     # if the sample is part of the baseline table, score it against the baseline *without* it
     in_table = files.sample_id in set(base["df"]["sample_id"])
     held_out_note = None

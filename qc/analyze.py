@@ -5,6 +5,7 @@ response is cached per sample and crack KPIs are (re)finalised once the threshol
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import time
 from dataclasses import dataclass, field
@@ -21,7 +22,33 @@ from .kpis.context import Ctx
 from .kpis.defects import crack_mask, curtaining_angle, sato_response
 from .kpis.pores import local_thickness_map, pore_threshold_slope
 
-CACHE_VERSION = 4
+CACHE_VERSION = 5
+QC_DIR = Path(__file__).resolve().parent
+
+# Source files each cached stage depends on: a stage is recomputed only when one of these (or the
+# config) changes, so `qc regress` over 31 samples re-runs just the stages whose code changed.
+STAGE_SOURCES = {
+    "seg": ["io.py", "segment.py"],
+    "sato": ["io.py", "segment.py", "kpis/defects.py"],
+    "kpis": ["io.py", "segment.py", "gates.py", "tiles.py", "analyze.py", "kpis/*.py"],
+}
+
+
+def _cfg_core(cfg: dict) -> dict:
+    return {k: v for k, v in cfg.items() if k != "sim"}
+
+
+def stage_version(stage: str, cfg: dict) -> str:
+    h = hashlib.sha1(str(CACHE_VERSION).encode())
+    for pat in STAGE_SOURCES[stage]:
+        for f in sorted(QC_DIR.glob(pat)):
+            h.update(f.read_bytes())
+    h.update(json.dumps(_cfg_core(cfg), sort_keys=True, default=str).encode())
+    return h.hexdigest()[:10]
+
+
+def pipeline_version(cfg: dict) -> str:
+    return stage_version("kpis", cfg)
 
 
 @dataclass
@@ -63,7 +90,7 @@ def _unclean(o):
     return np.nan if o is None else o
 
 
-def build_ctx(sample, seg, cfg, crack_threshold=None, with_cracks=True) -> Ctx:
+def build_ctx(sample, seg, cfg, crack_threshold=None, with_cracks=True, crack_resp=None) -> Ctx:
     g_noise = gates_mod.noise_sd(sample.bse, seg.carbon)
     ctx = Ctx(px_um=sample.px_um, bse=sample.bse, bse_s=seg.bse_s, pore=seg.pore, si=seg.si, carbon=seg.carbon,
               ambiguous=seg.ambiguous, si_labels=seg.si_labels, t1=seg.t1, t2=seg.t2, noise_sd=g_noise, cfg=cfg)
@@ -74,7 +101,7 @@ def build_ctx(sample, seg, cfg, crack_threshold=None, with_cracks=True) -> Ctx:
     st_sigma = cfg["structure_tensor_sigma_px"] * cfg["px_nm_target"] / sample.px_nm
     ctx.st = structure_tensor_maps(phase_map, st_sigma)
     if with_cracks:
-        ctx.crack_resp = sato_response(seg.bse_s, cfg["crack_sato_sigmas"])
+        ctx.crack_resp = crack_resp if crack_resp is not None else sato_response(seg.bse_s, cfg["crack_sato_sigmas"])
         ctx.crack_threshold = crack_threshold
         src = sample.inlens if sample.inlens is not None else sample.bse
         lo, hi = cfg["curtaining_search_deg"]
@@ -86,12 +113,45 @@ def build_ctx(sample, seg, cfg, crack_threshold=None, with_cracks=True) -> Ctx:
     return ctx
 
 
+def _seg_to_npz(seg, path: Path, key: str):
+    np.savez_compressed(path, key=key, pore=np.packbits(seg.pore), si=np.packbits(seg.si), amb=np.packbits(seg.ambiguous),
+                        si_labels=seg.si_labels, shape=np.array(seg.pore.shape), t1=seg.t1, t2=seg.t2,
+                        band=np.array(seg.band_thresholds, float), shading=seg.shading_flag,
+                        etd_cut=np.nan if seg.etd_pore_cut is None else seg.etd_pore_cut)
+
+
+def _seg_from_npz(path: Path, key: str, sample, cfg):
+    if not path.exists():
+        return None
+    z = np.load(path)
+    if str(z["key"]) != key:
+        return None
+    shape = tuple(z["shape"])
+    n = shape[0] * shape[1]
+
+    def unpack(a):
+        return np.unpackbits(a)[:n].reshape(shape).astype(bool)
+
+    pore, si, amb = unpack(z["pore"]), unpack(z["si"]), unpack(z["amb"])
+    sig = cfg["smoothing_sigma_px"]
+    bse_s = seg_mod.smooth(sample.bse, sig)
+    etd_s = seg_mod.smooth(sample.etd, sig) if sample.etd is not None else None
+    cut = float(z["etd_cut"])
+    return seg_mod.Segmentation(bse_s, etd_s, float(z["t1"]), float(z["t2"]), pore, amb, si, ~pore & ~si,
+                                z["si_labels"], z["band"].tolist(), bool(z["shading"]), None if np.isnan(cut) else cut)
+
+
 def analyze_sample(files: SampleFiles, cfg: dict, cache_dir: Path | None = None, crack_threshold: float | None = None,
                    force: bool = False, t_shift=(0.0, 0.0), downsample: int = 1, save_cache: bool = True) -> SampleResult:
+    """Cache layout out/cache/<sample_id>/: seg.npz, sato.npy(+sato.key), result.json, lists.npz, overlay.png.
+    Each stage is keyed by (file SHA-1, stage code+config version)."""
     sdir = Path(cache_dir) / files.sample_id if cache_dir else None
+    plain = t_shift == (0.0, 0.0) and downsample == 1
+    use_cache = sdir is not None and plain
     fp = files.fingerprint()
-    if sdir and not force and t_shift == (0.0, 0.0) and downsample == 1:
-        cached = load_cached(sdir, fp)
+    kv = stage_version("kpis", cfg)
+    if use_cache and not force:
+        cached = load_cached(sdir, fp, kv)
         if cached is not None:
             if crack_threshold is not None and cached.info.get("crack_threshold") != crack_threshold:
                 finalize_cracks(cached, sdir, crack_threshold, cfg)
@@ -106,22 +166,33 @@ def analyze_sample(files: SampleFiles, cfg: dict, cache_dir: Path | None = None,
             if a is not None:
                 setattr(sample, name, np.clip(downscale_local_mean(a.astype(np.float32), (downsample, downsample)), 0, 255).astype(np.uint8))
         sample.px_nm *= downsample
-    seg = seg_mod.segment(sample.bse, sample.etd, cfg, t_shift=t_shift, px_nm=sample.px_nm)
+    seg_key = f"{fp}:{stage_version('seg', cfg)}"
+    seg = _seg_from_npz(sdir / "seg.npz", seg_key, sample, cfg) if use_cache and not force else None
+    stages = {"seg": "cached" if seg is not None else "computed"}
+    if seg is None:
+        seg = seg_mod.segment(sample.bse, sample.etd, cfg, t_shift=t_shift, px_nm=sample.px_nm)
     t_seg = time.time() - t0
     g = gates_mod.compute_gates(sample, seg, cfg)
-    ctx = build_ctx(sample, seg, cfg, crack_threshold)
+    g["etd_is_se"] = float(files.etd_is_se)
+    sato_key = f"{fp}:{stage_version('sato', cfg)}"
+    resp = None
+    if use_cache and not force and (sdir / "sato.key").exists() and (sdir / "sato.key").read_text() == sato_key:
+        resp = np.load(sdir / "sato.npy")
+    stages["sato"] = "cached" if resp is not None else "computed"
+    ctx = build_ctx(sample, seg, cfg, crack_threshold, crack_resp=resp)
+    resp = ctx.crack_resp
     kpis, lists = tiles.compute_kpis(ctx)
     kpis["pore_frac_slope_per_level"] = pore_threshold_slope(seg.bse_s, seg.etd_s, seg.t1, seg.t2, cfg)
     strips = tiles.strip_kpis(ctx, cfg["strips"])
     keys = [k for k in kpis if isinstance(kpis[k], (int, float, np.floating, np.integer))]
     se = tiles.strip_se(strips, keys)
     ci = tiles.bootstrap_ci(strips, keys, cfg["bootstrap_n"], cfg["seed"])
-    resp = ctx.crack_resp
     info = dict(
-        fingerprint=fp, cache_version=CACHE_VERSION, flags=sample.flags, crop=sample.crop, shape=list(sample.bse.shape),
-        raw_shape=list(sample.raw_shape), px_nm=sample.px_nm, px_nm_assumed=sample.px_nm_assumed,
-        etd_is_se=files.etd_is_se, complete=files.complete, t_shift=list(t_shift), downsample=downsample,
-        crack_threshold=crack_threshold, sato_p995=float(np.percentile(resp[::2, ::2].astype(np.float32), cfg["crack_threshold_default_quantile"])) if resp is not None else None,
+        fingerprint=fp, kpi_version=kv, cache_version=CACHE_VERSION, stages=stages, flags=sample.flags, crop=sample.crop,
+        shape=list(sample.bse.shape), raw_shape=list(sample.raw_shape), px_nm=sample.px_nm, px_nm_assumed=sample.px_nm_assumed,
+        etd_is_se=files.etd_is_se, has_batch_prefix=files.has_batch_prefix, complete=files.complete, t_shift=list(t_shift),
+        downsample=downsample, crack_threshold=crack_threshold,
+        sato_p995=float(np.percentile(resp[::2, ::2].astype(np.float32), cfg["crack_threshold_default_quantile"])) if resp is not None else None,
         curtain_deg=ctx.curtain_deg, curtain_measured_deg=ctx.extras.get("curtain_measured_deg"),
         curtain_strength=ctx.extras.get("curtain_strength"),
         etd_pore_cut=seg.etd_pore_cut, band_thresholds=seg.band_thresholds,
@@ -129,11 +200,13 @@ def analyze_sample(files: SampleFiles, cfg: dict, cache_dir: Path | None = None,
         paths={k: str(v) for k, v in files.paths.items()},
     )
     res = SampleResult(files.sample_id, files.batch, kpis, se, ci, strips, g, info, lists)
-    if sdir and save_cache and t_shift == (0.0, 0.0) and downsample == 1:
+    if use_cache and save_cache:
         sdir.mkdir(parents=True, exist_ok=True)
-        np.save(sdir / "sato.npy", resp)
-        np.save(sdir / "pore.npy", np.packbits(seg.pore))
-        np.save(sdir / "si.npy", np.packbits(seg.si))
+        if stages["seg"] == "computed":
+            _seg_to_npz(seg, sdir / "seg.npz", seg_key)
+        if stages["sato"] == "computed":
+            np.save(sdir / "sato.npy", resp)
+            (sdir / "sato.key").write_text(sato_key)
         save_overlay(sample.bse, seg, ctx.extras.get("crack_skeleton"), sdir / "overlay.png")
         save_cached(res, sdir)
     return res
@@ -160,7 +233,7 @@ def save_cached(res: SampleResult, sdir: Path):
     np.savez_compressed(sdir / "lists.npz", **{k: np.asarray(v, np.float32) for k, v in res.lists.items()})
 
 
-def load_cached(sdir: Path, fingerprint: str | None = None) -> SampleResult | None:
+def load_cached(sdir: Path, fingerprint: str | None = None, kpi_version: str | None = None) -> SampleResult | None:
     p = sdir / "result.json"
     if not p.exists():
         return None
@@ -168,6 +241,8 @@ def load_cached(sdir: Path, fingerprint: str | None = None) -> SampleResult | No
     if d["info"].get("cache_version") != CACHE_VERSION:
         return None
     if fingerprint and d["info"].get("fingerprint") != fingerprint:
+        return None
+    if kpi_version and d["info"].get("kpi_version") != kpi_version:
         return None
     lists = {}
     if (sdir / "lists.npz").exists():

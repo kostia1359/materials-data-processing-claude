@@ -247,7 +247,7 @@ def fig_pca(df, model, stats, cfg, vj, path: Path):
 def _pooled_lists(base_out: Path, ids, key):
     vals = []
     for sid in ids:
-        p = Path(base_out) / "samples" / sid / "lists.npz"
+        p = Path(base_out) / "cache" / sid / "lists.npz"
         if p.exists():
             with np.load(p) as z:
                 if key in z.files:

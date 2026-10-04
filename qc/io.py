@@ -20,7 +20,7 @@ from scipy import ndimage as ndi
 # Files in the Drive folder sometimes carry a "Batch_N_" prefix and four samples have an
 # "SE" image where the others have "ETD" (both are secondary-electron detectors).
 FILE_RE = re.compile(
-    r"^(?:.*?_)?img_(?P<id>[a-z0-9]+)_(?P<det>BSE|ETD|Inlens|InLens|SE)\.tiff?$", re.IGNORECASE
+    r"^(?:Batch_(?P<pb>\d+)_)?img_(?P<id>[a-z0-9]+)_(?P<det>BSE|ETD|SE|Inlens)\.tiff?$", re.IGNORECASE
 )
 BATCH_RE = re.compile(r"batch[\s_-]*(\d)", re.IGNORECASE)
 DETECTORS = ("BSE", "ETD", "Inlens")
@@ -32,18 +32,39 @@ class SampleFiles:
     batch: str  # "1" | "2" | "3" | "unknown"
     paths: dict = field(default_factory=dict)  # det -> Path ; det in BSE/ETD/Inlens
     etd_is_se: bool = False
+    has_batch_prefix: bool = False
+
+    @property
+    def etd_label_in_filename(self) -> str:
+        return "SE" if self.etd_is_se else ("ETD" if "ETD" in self.paths else "")
 
     @property
     def complete(self) -> bool:
         return all(d in self.paths for d in DETECTORS)
 
     def fingerprint(self) -> str:
+        """SHA-1 over the file contents of all channels (stable across copies, renames and mtimes)."""
         h = hashlib.sha1()
         for d in sorted(self.paths):
-            p = Path(self.paths[d])
-            st = p.stat()
-            h.update(f"{d}:{p.name}:{st.st_size}:{int(st.st_mtime)}".encode())
+            h.update(d.encode())
+            h.update(file_sha1(self.paths[d]).encode())
         return h.hexdigest()[:12]
+
+
+_SHA_CACHE: dict = {}
+
+
+def file_sha1(path) -> str:
+    p = Path(path)
+    st = p.stat()
+    key = (str(p.resolve()), st.st_size, st.st_mtime_ns)
+    if key not in _SHA_CACHE:
+        h = hashlib.sha1()
+        with open(p, "rb") as f:
+            for chunk in iter(lambda: f.read(1 << 22), b""):
+                h.update(chunk)
+        _SHA_CACHE[key] = h.hexdigest()
+    return _SHA_CACHE[key]
 
 
 def _norm_det(det: str) -> tuple[str, bool]:
@@ -58,12 +79,13 @@ def _norm_det(det: str) -> tuple[str, bool]:
 
 
 def batch_from_path(path: Path, root: Path) -> str:
+    """Batch label = first `batch N` in the parent path (closest folder wins)."""
     try:
         rel = path.parent.relative_to(root)
         parts = [root.name, *rel.parts]
     except ValueError:
         parts = list(path.parent.parts)
-    for part in parts:
+    for part in reversed(parts):
         m = BATCH_RE.search(part)
         if m:
             return m.group(1)
@@ -82,9 +104,14 @@ def discover(data_dir: str | Path) -> list[SampleFiles]:
         sid = f"img_{m.group('id').lower()}"
         det, is_se = _norm_det(m.group("det"))
         batch = batch_from_path(p, root)
-        if any(part.lower() in ("test", "batch_unknown") for part in p.parts):
+        if any(part.lower() in ("test", "batch_unknown", "unknown") for part in p.relative_to(root).parts[:-1]):
             batch = "unknown"
+        pb = m.group("pb")
+        if pb is not None and batch != "unknown" and pb != batch:
+            raise SystemExit(f"{p}: filename prefix says batch {pb} but the folder says batch {batch}; "
+                             "the folder is authoritative - fix the file location before continuing")
         s = samples.setdefault(sid, SampleFiles(sid, batch))
+        s.has_batch_prefix = s.has_batch_prefix or pb is not None
         if det in s.paths:
             warnings.warn(f"{sid}: duplicate {det} file {p.name}; keeping {s.paths[det].name}")
             continue
@@ -305,6 +332,8 @@ def manifest_frame(samples: list[SampleFiles], cfg: dict) -> pd.DataFrame:
             sample_id=s.sample_id, batch=s.batch,
             path_bse=str(s.paths.get("BSE", "")), path_etd=str(s.paths.get("ETD", "")),
             path_inlens=str(s.paths.get("Inlens", "")), etd_is_se=s.etd_is_se,
+            etd_label_in_filename=s.etd_label_in_filename, has_batch_prefix=s.has_batch_prefix,
+            sha1_bse=file_sha1(s.paths["BSE"]),
             width=shape[1], height=shape[0], px_nm=px if px else cfg["px_nm_default"],
             px_nm_assumed=px is None, complete=s.complete,
         ))

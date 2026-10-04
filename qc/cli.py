@@ -147,6 +147,17 @@ def validate(data: Path = typer.Option(...), out: Path = typer.Option(Path("out"
 
 
 @app.command()
+def regress(data: Path = typer.Option(Path("data")), out: Path = typer.Option(Path("out")), accept: bool = typer.Option(False),
+            config: Path = typer.Option(None), workers: int = typer.Option(None)):
+    """Recompute KPIs (cached stages reused) and compare with the last accepted snapshot."""
+    from .build import build_baseline as bb
+    from .regress import run
+
+    bb(data, out, load_config(config), workers=workers)
+    raise typer.Exit(run(out, accept, log=typer.echo))
+
+
+@app.command()
 def quicklook(data: Path = typer.Option(...), out: Path = typer.Option(Path("out/quicklook")), config: Path = typer.Option(None)):
     """Downscaled 3-channel composite + histograms per sample, and a facts table (DATA_FACTS input)."""
     from .quicklook import run
@@ -156,11 +167,12 @@ def quicklook(data: Path = typer.Option(...), out: Path = typer.Option(Path("out
 
 @app.command()
 def fetch(manifest: Path = typer.Option(Path("data/drive_manifest.csv")), data: Path = typer.Option(Path("data")),
-          verify_only: bool = typer.Option(False)):
+          verify_only: bool = typer.Option(False),
+          only: list[str] = typer.Option(None, help="sample ids to fetch (repeatable); default all")):
     """Download the Drive files listed in the manifest (GOOGLE_API_KEY via googleapis.com, else gdown/drive.google.com)."""
     from .download import run
 
-    run(manifest, data, verify_only)
+    run(manifest, data, verify_only, only=only or None)
 
 
 @app.command()

@@ -9,7 +9,7 @@ GATE_KEYS = [
     "n_grey_levels_bse", "comb_step_bse", "noise_sd_bse", "blur_bse", "sat0_bse", "sat255_bse",
     "sat0_etd", "sat255_etd", "sat0_inlens", "sat255_inlens", "bse_c_med", "etd_c_med", "inlens_c_med",
     "bse_si_med", "etd_si_med", "inlens_si_med", "bse_row_gradient_pct", "t1", "t2",
-    "reg_shift_etd_px", "reg_shift_inlens_px", "height_px", "px_nm", "masked_rows",
+    "reg_shift_etd_px", "reg_shift_inlens_px", "height_px", "px_nm", "masked_rows", "etd_is_se",
 ]
 # gates used by the shadow (acquisition-only) classifier, brief 6.3
 SHADOW_GATES = ["inlens_c_med", "etd_c_med", "comb_step_bse", "n_grey_levels_bse", "noise_sd_bse", "height_px", "blur_bse"]
