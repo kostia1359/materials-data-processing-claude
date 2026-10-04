@@ -398,7 +398,7 @@ def sim_validation_md(out: Path, ablations: pd.DataFrame | None) -> list[str]:
     L = ["## 8. Simulation layer (Section 10)", "", f"_Assumptions hash {sb.get('assumptions_hash')}; {len(sim)} samples._", "",
          "### 8.1 Phantoms (exact cases)", "", pd.DataFrame(sb["phantoms"]).to_markdown(index=False, floatfmt=".4f"), "",
          "### 8.2 Invariants on every sample", "",
-         f"- Bound ordering D_eff(L_solid) ≤ D_eff(L_mid) ≤ D_eff(L_pore) at every D_c: **{sb['checks']['bounds_ordered_all']}**; per strip: **{sb['checks']['strip_bounds_ordered_all']}**",
+         f"- Bound ordering D_eff(L_solid) ≤ D_eff(L_mid) ≤ D_eff(L_pore) at every D_c: **{sb['checks']['bounds_ordered_all']}**; per strip (defined strips): **{sb['checks']['strip_bounds_ordered_all']}**; strips refused because nothing spans: {sb['checks'].get('strips_undefined_total')}",
          f"- Largest flux imbalance |Q_in − Q_out|/Q_in over all image and strip solves: **{sb['checks']['max_flux_imbalance']:.1e}**",
          f"- Pore phase alone spans the frame through-plane in {int(sim['pore_spans_TP'].sum())}/{len(sim)} samples (pore-only τ refused otherwise).",
          "", "### 8.3 Downsampling audit (×4 block-majority, ties → uncertain)", "",

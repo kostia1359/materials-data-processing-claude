@@ -23,8 +23,8 @@ QC_DIR = Path(__file__).resolve().parent
 
 def sim_stage_version(cfg: dict) -> str:
     h = hashlib.sha1(str(SIM_VERSION).encode())
-    for f in sorted(QC_DIR.glob("*.py")):
-        h.update(f.read_bytes())
+    for name in ("fuse.py", "laplace.py", "swell.py", "indices.py", "run.py"):  # per-image code only
+        h.update((QC_DIR / name).read_bytes())
     h.update(json.dumps(cfg["sim"], sort_keys=True).encode())
     return h.hexdigest()[:10]
 
@@ -106,9 +106,13 @@ def per_image(sample, seg, cfg: dict, n_strips: int = 5) -> tuple[dict, dict]:
             if name == "mid":
                 strip_flux.append(rr.get("flux_balance", np.nan))
         strip_vals.append(vals[1])
-        strip_ok.append(bool(vals[0] <= vals[1] * (1 + 1e-9) <= vals[2] * (1 + 1e-9)))
+        if all(np.isfinite(v) for v in vals):  # strips where a solve was refused (nothing spans) are not compared
+            strip_ok.append(bool(vals[0] <= vals[1] * (1 + 1e-9) <= vals[2] * (1 + 1e-9)))
+    sv = np.array([v if v is not None else np.nan for v in strip_vals], float)
     row["strip_D_eff_rel_TP"] = strip_vals
-    row["strip_D_eff_rel_TP_cv"] = float(np.std(strip_vals, ddof=1) / np.mean(strip_vals)) if len(strip_vals) > 1 else np.nan
+    row["strip_n_undefined"] = int((~np.isfinite(sv)).sum())
+    fin = sv[np.isfinite(sv)]
+    row["strip_D_eff_rel_TP_cv"] = float(np.std(fin, ddof=1) / np.mean(fin)) if len(fin) > 1 else np.nan
     row["strip_bounds_ordered"] = bool(all(strip_ok))
     row["strip_max_flux_imbalance"] = float(np.nanmax(strip_flux)) if strip_flux else np.nan
     row["undefined"] = undefined

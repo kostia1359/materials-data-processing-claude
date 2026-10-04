@@ -180,7 +180,8 @@ def evaluate_files(files: SampleFiles, base: dict, cfg: dict, report_dir: Path |
         row = analyze_sim(files, cfg, cache)
         rel = relative(row, x, base_sim, base_sim.get("base_kpi_median", {}), cfg, run_cell=True)
         sim_block = dict(rel, row=row, baseline=dict(median=base_sim["median"], p10=base_sim["p10"], p90=base_sim["p90"],
-                                                     D_c_sweep=base_sim.get("D_c_sweep", {}), n=base_sim.get("n")))
+                                                     D_c_sweep=base_sim.get("D_c_sweep", {}), n=base_sim.get("n")),
+                         rank_robustness=base_sim.get("rank_robustness", {}))
     elapsed = time.time() - t0
     verdict_json = report.build_verdict_json(res, st, model, v, g, a, cfg, held_out_note, elapsed, sim_block)
     if report_dir:

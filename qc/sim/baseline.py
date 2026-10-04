@@ -25,7 +25,9 @@ def _sim_worker(args):
 
 def _rel_worker(args):
     sid, row, kp, base_sim, base_med, cfg, se, cache = args
-    key = hashlib.sha1(json.dumps(_clean(dict(row=row, kp=kp, b=base_sim, m=base_med, se=se, a=cfg["sim"])), sort_keys=True, default=str).encode()).hexdigest()[:12]
+    code = (Path(__file__).parent / "cell.py").read_bytes() + (Path(__file__).parent / "run.py").read_bytes() + (Path(__file__).parent / "indices.py").read_bytes()
+    key = hashlib.sha1(json.dumps(_clean(dict(row=row, kp=kp, b=base_sim, m=base_med, se=se, a=cfg["sim"])), sort_keys=True, default=str).encode()
+                       + code).hexdigest()[:12]
     p = Path(cache) / sid / "sim_rel.json"
     if p.exists():
         d = json.loads(p.read_text())
@@ -96,7 +98,8 @@ def run(samples, df: pd.DataFrame, cfg: dict, out: Path, workers: int | None = N
                    base_kpi_median=base_med, checks=dict(
                        bounds_ordered_all=bool(sim_df["bounds_ordered"].all()), strip_bounds_ordered_all=bool(sim_df["strip_bounds_ordered"].all()),
                        max_flux_imbalance=float(np.nanmax(sim_df[["flux_balance_TP", "flux_balance_IP", "strip_max_flux_imbalance"]].to_numpy(float))),
-                       downsample_audit_ok_all=bool(sim_df["ds_audit_ok"].all())))
+                       downsample_audit_ok_all=bool(sim_df["ds_audit_ok"].all()),
+                       strips_undefined_total=int(sim_df["strip_n_undefined"].sum()) if "strip_n_undefined" in sim_df else None))
     (out / "sim_baseline.json").write_text(json.dumps(_clean(summary), indent=1))
     log(f"simulation layer: {len(rows)} samples; bounds ordered: {summary['checks']['bounds_ordered_all']}; "
         f"max flux imbalance {summary['checks']['max_flux_imbalance']:.1e}; phantoms ok: {all(p['ok'] for p in ph)}")

@@ -142,7 +142,10 @@ def sim_public(sim_block):
         conv[c] = dict(eps=d["eps"], energy_density_ratio=d.get("energy_density_ratio"),
                        **{k: pt.get(k) for k in ("Q_CC_1C_over_Q_C10", "Q_CC_3C_over_Q_C10", "min_neg_surface_dphi_sep_3C_V", "N_P")},
                        error=d.get("pybamm_error"))
+    rr = sim_block.get("rank_robustness", {})
+    unstable = [k for k, v in rr.items() if not v.get("stable", True)]
     return dict(grade={k: v["grade"] for k, v in idx.items()} | {"energy_density": "A", "pybamm": "B"},
+                unstable_across_conventions=unstable,
                 indices=idx, relative_to_baseline=rel, bounds=sim_block["bounds"], porosity_conventions=conv,
                 undefined=sim_block["undefined"], checks=sim_block["checks"], assumptions_hash=sim_block["assumptions_hash"],
                 uncertain_frac=row.get("uncertain_frac"))
@@ -172,6 +175,10 @@ def sim_table_md(vj) -> str:
             L.append(f"| PyBaMM min negative surface Δφ at separator, 3C (V; < 0 = plating indicator) [{c}] | B | {fmt(d.get('min_neg_surface_dphi_sep_3C_V'))} |  |  |  |")
         elif d.get("error"):
             L.append(f"| PyBaMM [{c}] | B | undefined: {d['error'][:80]} |  |  |  |")
+    if s.get("unstable_across_conventions"):
+        L.append("")
+        L.append("**Marked unstable** (sample ranking changes between conventions, brief 10.4): " + "; ".join(s["unstable_across_conventions"])
+                 + ". Read those rows as direction-free.")
     if s.get("undefined"):
         L.append("")
         L.append("Undefined (refused) solves: " + "; ".join(s["undefined"]))
