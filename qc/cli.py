@@ -157,8 +157,8 @@ def quicklook(data: Path = typer.Option(...), out: Path = typer.Option(Path("out
 @app.command()
 def fetch(manifest: Path = typer.Option(Path("data/drive_manifest.csv")), data: Path = typer.Option(Path("data")),
           verify_only: bool = typer.Option(False)):
-    """Download the Drive files listed in the manifest (needs network access to drive.google.com)."""
-    from .fetch import run
+    """Download the Drive files listed in the manifest (GOOGLE_API_KEY via googleapis.com, else gdown/drive.google.com)."""
+    from .download import run
 
     run(manifest, data, verify_only)
 
