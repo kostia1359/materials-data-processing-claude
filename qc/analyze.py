@@ -38,7 +38,7 @@ STAGE_SOURCES = {
 # must not invalidate the image-level cache
 _POST_KPI_KEYS = {"sim", "crack_threshold_frozen", "zones", "weights", "shrinkage_grid", "temperature_grid", "gate_caution_z",
                   "signature_min_effect", "signature_min_stability", "scale_rel_floor", "scale_abs_floor",
-                  "validation_sensitivity_samples_per_batch", "manual_masks"}
+                  "validation_sensitivity_samples_per_batch", "manual_masks", "classifier_features"}
 
 
 def _cfg_core(cfg: dict) -> dict:

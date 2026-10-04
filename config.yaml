@@ -42,6 +42,7 @@ temperature_grid: [0.5, 1, 2, 4, 8]
 bootstrap_n: 1000
 seed: 0
 weights: {R: 1.0, M: 0.7, W: 0.4}
+classifier_features: null   # null = the frozen 16-KPI shortlist (brief 4.6); variants are evaluated in VALIDATION.md
 validation_sensitivity_samples_per_batch: 1
 manual_masks: {}   # sample_id: {top: rows, bottom: rows, left: cols, right: cols}
 

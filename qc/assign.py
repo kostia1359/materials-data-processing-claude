@@ -12,7 +12,13 @@ from .kpis.registry import SHORTLIST, weight
 EPS = 1e-3
 
 
-def feature_vector(x: dict, stats: dict, cfg: dict, keys=SHORTLIST) -> np.ndarray:
+def features(cfg: dict) -> list[str]:
+    """Classifier features: config `classifier_features` if set, else the frozen brief shortlist."""
+    return list(cfg.get("classifier_features") or SHORTLIST)
+
+
+def feature_vector(x: dict, stats: dict, cfg: dict, keys=None) -> np.ndarray:
+    keys = keys or features(cfg)
     v = []
     for k in keys:
         s = stats["kpi"].get(k)
@@ -24,7 +30,8 @@ def feature_vector(x: dict, stats: dict, cfg: dict, keys=SHORTLIST) -> np.ndarra
     return np.array(v, float)
 
 
-def feature_matrix(df: pd.DataFrame, stats: dict, cfg: dict, keys=SHORTLIST) -> np.ndarray:
+def feature_matrix(df: pd.DataFrame, stats: dict, cfg: dict, keys=None) -> np.ndarray:
+    keys = keys or features(cfg)
     return np.array([feature_vector(r, stats, cfg, keys) for r in df.to_dict("records")]).reshape(len(df), len(keys))
 
 
@@ -190,7 +197,7 @@ def batch_signatures(df: pd.DataFrame, stats: dict, cfg: dict) -> dict:
     for b in sorted(set(lab["batch"].astype(str)) - {"3"}):
         sub = lab[lab["batch"].astype(str) == b]
         effects = {}
-        for k in SHORTLIST:
+        for k in features(cfg):
             s = stats["kpi"].get(k)
             if s is None or not np.isfinite(s["med"]):
                 continue
@@ -252,7 +259,7 @@ def signature_match(x: dict, stats: dict, sigs: dict, cfg: dict) -> dict:
             (matched[b] if e["sign"] * zk > 1 else missed[b]).append(k)
         match[b] = float(num / den) if den else np.nan
     # "different in a new way": large |z| on shortlist KPIs that belong to no signature, and no signature matched
-    off = [k for k in SHORTLIST if k not in sig_keys and np.isfinite(z.get(k, np.nan)) and abs(z[k]) > cfg["zones"]["reject"]]
+    off = [k for k in features(cfg) if k not in sig_keys and np.isfinite(z.get(k, np.nan)) and abs(z[k]) > cfg["zones"]["reject"]]
     best = max([v for v in match.values() if np.isfinite(v)], default=np.nan)
     new_way = bool(off) and not (np.isfinite(best) and best > 1.5)
     return dict(match=match, matched=matched, missed=missed, new_way=new_way, off_signature_kpis=off)
@@ -271,4 +278,4 @@ def build_model(df: pd.DataFrame, stats: dict, cfg: dict) -> dict:
     return dict(centroids={c: v.tolist() for c, v in C.items()}, delta=params["delta"], T=params["T"],
                 tuning=params, within_distances=within, signatures=sigs, n_labelled=int(len(y)),
                 counts={c: int((y == c).sum()) for c in sorted(set(y))}, loio_accuracy_fixed_baseline=float(acc) if np.isfinite(acc) else None,
-                features=SHORTLIST)
+                features=features(cfg))

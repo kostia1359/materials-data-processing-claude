@@ -7,6 +7,8 @@ from qc.config import load_config
 from qc.kpis.registry import SHORTLIST
 
 CFG = load_config()
+# brief defaults (the deployed config raises them to remove baseline false alarms; see DECISIONS.md)
+CFG["zones"] = {"investigate": 2.5, "reject": 4.0, "multi_count_z": 2.5, "multi_count_n": 3, "investigate_count_z": 2.0, "investigate_count_n": 2}
 
 
 def _frame(rng):
