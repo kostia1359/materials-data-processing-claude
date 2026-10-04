@@ -1,41 +1,43 @@
 {
  "sample_id": "img_0grcilhi",
- "true_batch_if_known": "3",
+ "true_batch_if_known": null,
  "baseline": {
   "batch": 3,
-  "n_images": 1,
-  "version": "97625928"
+  "n_images": 16,
+  "version": "64639794"
  },
  "acquisition_gates": {
-  "status": "ok",
+  "status": "caution",
   "flags": [
+   "sat0_inlens z=+10.0",
    "shading_flag"
   ],
   "z": {
-   "n_grey_levels_bse": 0.0,
+   "n_grey_levels_bse": 0.2950897072710104,
    "comb_step_bse": 0.0,
-   "noise_sd_bse": 0.0,
-   "blur_bse": 0.0,
-   "sat0_bse": 0.0,
+   "noise_sd_bse": 0.09071217623579265,
+   "blur_bse": 1.4682195147122976,
+   "sat0_bse": 1.5107877920779629,
    "sat255_bse": 0.0,
-   "sat0_etd": 0.0,
-   "sat255_etd": 0.0,
-   "sat0_inlens": 0.0,
-   "sat255_inlens": 0.0,
-   "bse_c_med": 0.0,
-   "etd_c_med": 0.0,
-   "inlens_c_med": 0.0,
-   "bse_si_med": 0.0,
-   "etd_si_med": 0.0,
-   "inlens_si_med": 0.0,
-   "bse_row_gradient_pct": 0.0,
-   "t1": 0.0,
-   "t2": 0.0,
-   "reg_shift_etd_px": 0.0,
-   "reg_shift_inlens_px": 0.0,
-   "height_px": 0.0,
-   "px_nm": 0.0,
-   "masked_rows": 0.0
+   "sat0_etd": 1.4461318789882045,
+   "sat255_etd": -0.5877386027502335,
+   "sat0_inlens": 10.011362926043144,
+   "sat255_inlens": 0.6020906081199664,
+   "bse_c_med": -0.22483025315886507,
+   "etd_c_med": -0.9395973154362416,
+   "inlens_c_med": -0.11902778108410503,
+   "bse_si_med": 0.1839520253117987,
+   "etd_si_med": -1.3333333333333333,
+   "inlens_si_med": 0.27479253163861284,
+   "bse_row_gradient_pct": 3.7954576409385865,
+   "t1": -0.7303148007320356,
+   "t2": -0.4378778879353921,
+   "reg_shift_etd_px": -0.6744907594765952,
+   "reg_shift_inlens_px": -0.45205161642320313,
+   "height_px": -1.5503875968992247,
+   "px_nm": 0.00032252675522963416,
+   "masked_rows": 0.0,
+   "etd_is_se": 0.0
   },
   "values": {
    "n_grey_levels_bse": 177,
@@ -63,24 +65,128 @@
    "inlens_si_med": 156.0,
    "reg_shift_etd_px": 0.20000000298023224,
    "reg_shift_inlens_px": 0.10000000149011612,
-   "gate_flags": "shading_flag"
+   "gate_flags": "shading_flag",
+   "etd_is_se": 0.0
   }
  },
  "verdict_vs_baseline": {
   "decision": "ACCEPT",
   "reasons": [],
-  "aggregate_score_S": 0.0,
-  "conformal_rank_p": null,
-  "p_floor": 0.5,
+  "aggregate_score_S": 4.997661118772463,
+  "conformal_rank_p": 0.17647058823529413,
+  "p_floor": 0.058823529411764705,
   "n_kpis_beyond_2_5": 0,
   "defect_alarms": [],
+  "zones": {
+   "investigate": 8.0,
+   "reject": 12.8
+  },
   "drivers": [
+   {
+    "kpi": "pore_frac_deep",
+    "value": 0.16143222793547257,
+    "baseline_median": 0.1206253342809814,
+    "baseline_scale": 0.007451260541502821,
+    "z": 5.476508763477079,
+    "direction": "higher",
+    "robustness": "W",
+    "unit": "fraction",
+    "meaning": "more deep porosity (lower bound): better electrolyte transport, lower energy density"
+   },
+   {
+    "kpi": "pore_chord_h_mean_um",
+    "value": 0.8978991508483887,
+    "baseline_median": 0.6300995945930481,
+    "baseline_scale": 0.055660763972997664,
+    "z": 4.811280642595139,
+    "direction": "higher",
+    "robustness": "R",
+    "unit": "um",
+    "meaning": "wider in-plane pores"
+   },
+   {
+    "kpi": "pore_chord_v_mean_um",
+    "value": 0.7376817464828491,
+    "baseline_median": 0.5349155068397522,
+    "baseline_scale": 0.043094129973649975,
+    "z": 4.70519395024517,
+    "direction": "higher",
+    "robustness": "R",
+    "unit": "um",
+    "meaning": "taller through-plane pores: easier through-plane transport"
+   },
+   {
+    "kpi": "s2_len_pore_h_px",
+    "value": 53.210486971206606,
+    "baseline_median": 32.56616551338557,
+    "baseline_scale": 4.691169669460262,
+    "z": 4.400676784772155,
+    "direction": "higher",
+    "robustness": "R",
+    "unit": "px",
+    "meaning": "pore network stretched in-plane (longer correlation length): flatter, more aligned pores; consistent with heavier calendering"
+   },
+   {
+    "kpi": "crack_density_um_per_mm2",
+    "value": 297.1972478189315,
+    "baseline_median": 2696.2657049487207,
+    "baseline_scale": 1710.877916463308,
+    "z": -1.4022440958786204,
+    "direction": "lower",
+    "robustness": "M",
+    "unit": "um/mm^2",
+    "meaning": "fewer cracks"
+   },
+   {
+    "kpi": "si_num_density_mm2",
+    "value": 23054.796247725582,
+    "baseline_median": 26598.825960354334,
+    "baseline_scale": 4835.885186690862,
+    "z": -0.7328605985895807,
+    "direction": "lower",
+    "robustness": "M",
+    "unit": "mm^-2",
+    "meaning": "fewer Si-candidate particles per area (coarser or less loaded)"
+   },
+   {
+    "kpi": "aniso_pore_chord_ratio",
+    "value": 1.2171903848648071,
+    "baseline_median": 1.1755156517028809,
+    "baseline_scale": 0.05877578258514404,
+    "z": 0.7090459935868183,
+    "direction": "higher",
+    "robustness": "R",
+    "unit": "ratio",
+    "meaning": "pores more aligned parallel to the collector: higher through-plane tortuosity, slower fast charge; consistent with heavier calendering"
+   },
+   {
+    "kpi": "si_quadrat_cv",
+    "value": 0.8565908572416041,
+    "baseline_median": 0.7384254316453909,
+    "baseline_scale": 0.17534841001358065,
+    "z": 0.6738893474258557,
+    "direction": "higher",
+    "robustness": "M",
+    "unit": "ratio",
+    "meaning": "Si-candidate less evenly distributed (mixing/dispersion issue): local swelling hot-spots"
+   },
+   {
+    "kpi": "si_contact_pore_frac",
+    "value": 0.012658481986006404,
+    "baseline_median": 0.017283137908783046,
+    "baseline_scale": 0.007945782495711925,
+    "z": -0.5820264933343462,
+    "direction": "lower",
+    "robustness": "R",
+    "unit": "fraction",
+    "meaning": "less buffer space around Si-candidate: swelling stresses the matrix"
+   },
    {
     "kpi": "si_frac_solid",
     "value": 0.0629136334516458,
-    "baseline_median": 0.0629136334516458,
-    "baseline_scale": 0.010209242654310875,
-    "z": 0.0,
+    "baseline_median": 0.06738619485639105,
+    "baseline_scale": 0.008485007844065896,
+    "z": -0.5271134083715899,
     "direction": "lower",
     "robustness": "M",
     "unit": "fraction",
@@ -89,123 +195,57 @@
    {
     "kpi": "si_d50_aw_um",
     "value": 3.3482450753964295,
-    "baseline_median": 3.3482450753964295,
-    "baseline_scale": 0.34857196979867805,
-    "z": 0.0,
-    "direction": "lower",
+    "baseline_median": 3.1795041366100767,
+    "baseline_scale": 0.34720062269320084,
+    "z": 0.4860041363907876,
+    "direction": "higher",
     "robustness": "R",
     "unit": "um",
-    "meaning": "finer Si-candidate: more surface/SEI, less fracture"
+    "meaning": "coarser Si-candidate (area-weighted D50): higher fracture and swelling risk, more particle isolation"
    },
    {
     "kpi": "si_d90_aw_um",
     "value": 6.086762075149372,
-    "baseline_median": 6.086762075149372,
-    "baseline_scale": 0.5372066679631766,
-    "z": 0.0,
-    "direction": "lower",
+    "baseline_median": 5.772842365252922,
+    "baseline_scale": 0.8181460051929674,
+    "z": 0.38369644037118955,
+    "direction": "higher",
     "robustness": "R",
     "unit": "um",
-    "meaning": "fewer coarse Si-candidate particles"
+    "meaning": "more coarse Si-candidate particles in the tail: fracture/swelling hot-spots"
    },
    {
-    "kpi": "si_num_density_mm2",
-    "value": 23054.796247725582,
-    "baseline_median": 23054.796247725582,
-    "baseline_scale": 1816.776269511972,
-    "z": 0.0,
-    "direction": "lower",
-    "robustness": "M",
-    "unit": "mm^-2",
-    "meaning": "fewer Si-candidate particles per area (coarser or less loaded)"
-   },
-   {
-    "kpi": "si_solidity_med",
-    "value": 0.8824451410658307,
-    "baseline_median": 0.8824451410658307,
-    "baseline_scale": 0.044122257053291536,
-    "z": 0.0,
-    "direction": "lower",
+    "kpi": "si_contact_carbon_frac",
+    "value": 0.9873415180139936,
+    "baseline_median": 0.982716862091217,
+    "baseline_scale": 0.04913584310456085,
+    "z": 0.09411980400815273,
+    "direction": "higher",
     "robustness": "R",
-    "unit": "ratio",
-    "meaning": "more irregular/porous Si-candidate shapes (grade change?)"
-   },
-   {
-    "kpi": "si_quadrat_cv",
-    "value": 0.8565908572416041,
-    "baseline_median": 0.8565908572416041,
-    "baseline_scale": 0.11306162921774555,
-    "z": 0.0,
-    "direction": "lower",
-    "robustness": "M",
-    "unit": "ratio",
-    "meaning": "Si-candidate more evenly distributed"
-   },
-   {
-    "kpi": "pore_frac_deep",
-    "value": 0.16143222793547257,
-    "baseline_median": 0.16143222793547257,
-    "baseline_scale": 0.009946584449241904,
-    "z": 0.0,
-    "direction": "lower",
-    "robustness": "W",
     "unit": "fraction",
-    "meaning": "less deep porosity (lower bound): denser coating, slower ionic transport; consistent with heavier calendering"
-   },
-   {
-    "kpi": "pore_chord_h_mean_um",
-    "value": 0.8978991508483887,
-    "baseline_median": 0.8978991508483887,
-    "baseline_scale": 0.06311311217217583,
-    "z": 0.0,
-    "direction": "lower",
-    "robustness": "R",
-    "unit": "um",
-    "meaning": "narrower in-plane pores; consistent with heavier calendering"
-   },
-   {
-    "kpi": "pore_chord_v_mean_um",
-    "value": 0.7376817464828491,
-    "baseline_median": 0.7376817464828491,
-    "baseline_scale": 0.06491679242267825,
-    "z": 0.0,
-    "direction": "lower",
-    "robustness": "R",
-    "unit": "um",
-    "meaning": "flatter through-plane pores: more tortuous transport; consistent with heavier calendering"
-   },
-   {
-    "kpi": "aniso_pore_chord_ratio",
-    "value": 1.2171903848648071,
-    "baseline_median": 1.2171903848648071,
-    "baseline_scale": 0.06085951924324036,
-    "z": 0.0,
-    "direction": "lower",
-    "robustness": "R",
-    "unit": "ratio",
-    "meaning": "pores less aligned: lower through-plane tortuosity"
+    "meaning": "Si-candidate better wired to the carbon matrix"
    },
    {
     "kpi": "aniso_carbon_chord_ratio",
     "value": 1.1971840858459473,
-    "baseline_median": 1.1971840858459473,
-    "baseline_scale": 0.059859204292297366,
-    "z": 0.0,
+    "baseline_median": 1.201971173286438,
+    "baseline_scale": 0.0600985586643219,
+    "z": -0.07965394756351493,
     "direction": "lower",
     "robustness": "R",
     "unit": "ratio",
     "meaning": "carbon matrix less aligned"
    },
    {
-    "kpi": "s2_len_pore_h_px",
-    "value": 53.210486971206606,
-    "baseline_median": 53.210486971206606,
-    "baseline_scale": 5.1578442706268195,
-    "z": 0.0,
+    "kpi": "si_solidity_med",
+    "value": 0.8824451410658307,
+    "baseline_median": 0.884716478220515,
+    "baseline_scale": 0.044235823911025755,
+    "z": -0.0513461026351128,
     "direction": "lower",
     "robustness": "R",
-    "unit": "px",
-    "meaning": "shorter in-plane pore correlation length: finer, less stretched pore network"
+    "unit": "ratio",
+    "meaning": "more irregular/porous Si-candidate shapes (grade change?)"
    },
    {
     "kpi": "pore_percolating_frac_v",
@@ -217,65 +257,42 @@
     "robustness": "M",
     "unit": "fraction",
     "meaning": "fewer through-plane connected deep pores: transport bottleneck, plating risk"
-   },
-   {
-    "kpi": "si_contact_pore_frac",
-    "value": 0.012658481986006404,
-    "baseline_median": 0.012658481986006404,
-    "baseline_scale": 0.005,
-    "z": 0.0,
-    "direction": "lower",
-    "robustness": "R",
-    "unit": "fraction",
-    "meaning": "less buffer space around Si-candidate: swelling stresses the matrix"
-   },
-   {
-    "kpi": "si_contact_carbon_frac",
-    "value": 0.9873415180139936,
-    "baseline_median": 0.9873415180139936,
-    "baseline_scale": 0.049367075900699685,
-    "z": 0.0,
-    "direction": "lower",
-    "robustness": "R",
-    "unit": "fraction",
-    "meaning": "Si-candidate less wired to carbon: risk of electronic isolation"
-   },
-   {
-    "kpi": "crack_density_um_per_mm2",
-    "value": 2485.6497090310636,
-    "baseline_median": 2485.6497090310636,
-    "baseline_scale": 681.3333288254953,
-    "z": 0.0,
-    "direction": "lower",
-    "robustness": "M",
-    "unit": "um/mm^2",
-    "meaning": "fewer cracks"
    }
   ]
  },
  "batch_assignment": {
   "assigned_batch": "3",
   "probabilities": {
-   "3": 1.0
+   "1": 0.1114245022521156,
+   "2": 0.3129953356165466,
+   "3": 0.5755801621313379
   },
   "distances": {
-   "3": 0.0
+   "1": 9.927364004892866,
+   "2": 9.056881334162105,
+   "3": 8.501767813646897
   },
   "stability": 1.0,
   "strip_agreement": 1.0,
-  "confidence_label": "confident",
+  "confidence_label": "moderately confident",
   "novelty_flag": false,
-  "in_distribution_score": null,
-  "signature_match": {},
-  "signature_kpis_matched": {},
-  "signature_kpis_missed": {},
+  "in_distribution_score": 0.12903225806451613,
+  "signature_match": {
+   "1": null,
+   "2": null
+  },
+  "signature_kpis_matched": {
+   "1": [],
+   "2": []
+  },
+  "signature_kpis_missed": {
+   "1": [],
+   "2": []
+  },
   "beyond_labelled_range": false,
   "priors": "uniform",
-  "calibration_note": "T=2.0 and shrinkage \u0394=0.0 chosen by leave-one-image-out log-loss on 1 labelled images; LOIO accuracy 0.00",
-  "classes_without_training_images": [
-   "1",
-   "2"
-  ]
+  "calibration_note": "T=8.0 and shrinkage \u0394=0.0 chosen by leave-one-image-out log-loss on 30 labelled images; LOIO accuracy 0.37",
+  "classes_without_training_images": []
  },
  "kpis": {
   "si_frac_solid": {
@@ -285,7 +302,7 @@
     0.04626239190126764,
     0.07960101000439349
    ],
-   "z": 0.0,
+   "z": -0.5271134083715899,
    "unit": "fraction",
    "robustness": "M",
    "shortlist": true
@@ -297,8 +314,20 @@
     0.038562085645552004,
     0.0669566327066924
    ],
-   "z": 0.0,
+   "z": -0.8501575892573435,
    "unit": "fraction",
+   "robustness": "M",
+   "shortlist": false
+  },
+  "si_bse_contrast": {
+   "value": 1.5701316256567714,
+   "se": 0.04677843121010821,
+   "ci95": [
+    1.5165004363121486,
+    1.6758881872797091
+   ],
+   "z": -0.7506176233090248,
+   "unit": "ratio",
    "robustness": "M",
    "shortlist": false
   },
@@ -309,7 +338,7 @@
     2.4925109866492425,
     3.6930520797478352
    ],
-   "z": 0.0,
+   "z": 0.4860041363907876,
    "unit": "um",
    "robustness": "R",
    "shortlist": true
@@ -321,7 +350,7 @@
     4.000012389199835,
     5.7905787344179505
    ],
-   "z": 0.0,
+   "z": 0.38369644037118955,
    "unit": "um",
    "robustness": "R",
    "shortlist": true
@@ -333,7 +362,7 @@
     1.1210489300212798,
     1.6276238989826943
    ],
-   "z": 0.0,
+   "z": 0.41236371631359914,
    "unit": "um",
    "robustness": "M",
    "shortlist": false
@@ -345,7 +374,7 @@
     1.0165545231198914,
     1.4512725235860608
    ],
-   "z": 0.0,
+   "z": -0.24099653200400917,
    "unit": "ratio",
    "robustness": "M",
    "shortlist": false
@@ -357,7 +386,7 @@
     20533.489326211486,
     26907.946301178676
    ],
-   "z": 0.0,
+   "z": -0.7328605985895807,
    "unit": "mm^-2",
    "robustness": "M",
    "shortlist": true
@@ -369,7 +398,7 @@
     0.8311810987771391,
     0.8950978300318602
    ],
-   "z": 0.0,
+   "z": -0.0513461026351128,
    "unit": "ratio",
    "robustness": "R",
    "shortlist": true
@@ -381,7 +410,7 @@
     1.7283630690447631,
     1.932551648781232
    ],
-   "z": 0.0,
+   "z": 0.7802581269600393,
    "unit": "ratio",
    "robustness": "R",
    "shortlist": false
@@ -393,7 +422,7 @@
     0.5084667307020767,
     0.6292404417960755
    ],
-   "z": 0.0,
+   "z": -0.2100315728746049,
    "unit": "ratio",
    "robustness": "R",
    "shortlist": false
@@ -405,7 +434,7 @@
     0.7271843942815768,
     0.8233569837284461
    ],
-   "z": 0.0,
+   "z": 0.8687661135020498,
    "unit": "ratio",
    "robustness": "M",
    "shortlist": false
@@ -417,7 +446,7 @@
     0.5038777092280115,
     0.8727554780125322
    ],
-   "z": 0.0,
+   "z": 0.6738893474258557,
    "unit": "ratio",
    "robustness": "M",
    "shortlist": true
@@ -429,7 +458,7 @@
     0.7461726945355294,
     0.9677574916017022
    ],
-   "z": 0.0,
+   "z": 1.4131683667083346,
    "unit": "ratio",
    "robustness": "M",
    "shortlist": false
@@ -441,7 +470,7 @@
     0.8227254380589214,
     0.9309800876396116
    ],
-   "z": 0.0,
+   "z": 0.5138044106431048,
    "unit": "fraction",
    "robustness": "M",
    "shortlist": false
@@ -453,7 +482,7 @@
     0.14166581450307072,
     0.17801437819588165
    ],
-   "z": 0.0,
+   "z": 5.476508763477079,
    "unit": "fraction",
    "robustness": "W",
    "shortlist": true
@@ -465,7 +494,7 @@
     null,
     null
    ],
-   "z": 0.0,
+   "z": 0.6367333123141115,
    "unit": "1/level",
    "robustness": "W",
    "shortlist": false
@@ -477,7 +506,7 @@
     0.008713535735952708,
     0.010437304407109521
    ],
-   "z": 0.0,
+   "z": 0.7070369905993441,
    "unit": "fraction",
    "robustness": "W",
    "shortlist": false
@@ -489,7 +518,7 @@
     0.7459835430979729,
     0.9657974243164062
    ],
-   "z": 0.0,
+   "z": 4.811280642595139,
    "unit": "um",
    "robustness": "R",
    "shortlist": true
@@ -501,7 +530,7 @@
     0.6195038080215454,
     0.8547448515892029
    ],
-   "z": 0.0,
+   "z": 4.70519395024517,
    "unit": "um",
    "robustness": "R",
    "shortlist": true
@@ -513,7 +542,7 @@
     1.7346630561351775,
     2.5750565052032472
    ],
-   "z": 0.0,
+   "z": 4.806303582127543,
    "unit": "um",
    "robustness": "M",
    "shortlist": false
@@ -525,7 +554,7 @@
     0.8366188319856309,
     1.3607396456953755
    ],
-   "z": 0.0,
+   "z": 6.416455662972875,
    "unit": "um",
    "robustness": "M",
    "shortlist": false
@@ -537,7 +566,7 @@
     1.1244736194610596,
     1.1997018814086915
    ],
-   "z": 0.0,
+   "z": 0.7090459935868183,
    "unit": "ratio",
    "robustness": "R",
    "shortlist": true
@@ -549,7 +578,7 @@
     0.9071078896522522,
     0.9478907942771911
    ],
-   "z": 0.0,
+   "z": -0.07965394756351493,
    "unit": "ratio",
    "robustness": "R",
    "shortlist": true
@@ -561,7 +590,7 @@
     0.12412649091212771,
     0.15474940581350363
    ],
-   "z": 0.0,
+   "z": 0.36258060617042226,
    "unit": "ratio",
    "robustness": "R",
    "shortlist": false
@@ -573,7 +602,7 @@
     2.1065668309521812,
     17.62384223637882
    ],
-   "z": 0.0,
+   "z": 2.1745407624321027,
    "unit": "deg",
    "robustness": "R",
    "shortlist": false
@@ -585,7 +614,7 @@
     41.953567861746066,
     59.501535757699244
    ],
-   "z": 0.0,
+   "z": 4.400676784772155,
    "unit": "px",
    "robustness": "R",
    "shortlist": true
@@ -597,7 +626,7 @@
     23.807986816579323,
     34.98449493408084
    ],
-   "z": 0.0,
+   "z": 2.76836434369361,
    "unit": "px",
    "robustness": "R",
    "shortlist": false
@@ -609,7 +638,7 @@
     50.95068998422651,
     70.8255978500304
    ],
-   "z": 0.0,
+   "z": -0.1534982403533216,
    "unit": "px",
    "robustness": "R",
    "shortlist": false
@@ -621,7 +650,7 @@
     8895.613048690484,
     19028.247909064652
    ],
-   "z": 0.0,
+   "z": 6.322282381973545,
    "unit": "px^2",
    "robustness": "M",
    "shortlist": false
@@ -657,7 +686,7 @@
     58593.22103685094,
     112539.52606436508
    ],
-   "z": 0.0,
+   "z": -3.0453014298997423,
    "unit": "mm^-2",
    "robustness": "M",
    "shortlist": false
@@ -669,7 +698,7 @@
     0.5941726520719837,
     0.6658497863619489
    ],
-   "z": 0.0,
+   "z": -0.858131434008485,
    "unit": "um^-1",
    "robustness": "M",
    "shortlist": false
@@ -681,7 +710,7 @@
     0.00935753714736858,
     0.015175471171231362
    ],
-   "z": 0.0,
+   "z": -0.5820264933343462,
    "unit": "fraction",
    "robustness": "R",
    "shortlist": true
@@ -693,19 +722,19 @@
     0.9848245288287687,
     0.9906424628526314
    ],
-   "z": 0.0,
+   "z": 0.09411980400815273,
    "unit": "fraction",
    "robustness": "R",
    "shortlist": true
   },
   "crack_density_um_per_mm2": {
-   "value": 2485.6497090310636,
-   "se": 681.3333288254953,
+   "value": 297.1972478189315,
+   "se": 297.1123343195546,
    "ci95": [
-    1092.7948727811468,
-    3601.74347370183
+    0.0,
+    891.3370029586638
    ],
-   "z": 0.0,
+   "z": -1.4022440958786204,
    "unit": "um/mm^2",
    "robustness": "M",
    "shortlist": true
@@ -717,7 +746,7 @@
     7.256550545549183,
     11.923501902669878
    ],
-   "z": 0.0,
+   "z": 3.1079358397299033,
    "unit": "um",
    "robustness": "M",
    "shortlist": false
@@ -741,7 +770,7 @@
     0.168137547114331,
     3.527406635295126
    ],
-   "z": 0.0,
+   "z": 2.7627441082921522,
    "unit": "pp/10um",
    "robustness": "W",
    "shortlist": false
@@ -753,7 +782,7 @@
     -2.7229477091690564,
     -0.7130614541981662
    ],
-   "z": 0.0,
+   "z": -2.566869927192565,
    "unit": "pp/10um",
    "robustness": "W",
    "shortlist": false
@@ -765,7 +794,7 @@
     0.013411803038817813,
     0.024494555414041816
    ],
-   "z": 0.0,
+   "z": 0.13742240773139366,
    "unit": "fraction",
    "robustness": "R",
    "shortlist": false
@@ -777,7 +806,7 @@
     0.02034338462403811,
     0.032007869007872954
    ],
-   "z": 0.0,
+   "z": 1.1430261519110287,
    "unit": "fraction",
    "robustness": "R",
    "shortlist": false
@@ -818,10 +847,161 @@
   "Anisotropy and transport indices are 2-D section quantities compared like-with-like against the baseline, not 3-D values; the through-plane direction is assumed vertical in the frame.",
   "Pixel size (25 nm/px) is taken from the TIFF resolution tags; vendor metadata is absent, so it is unverified.",
   "With N baseline images the smallest achievable rank p-value is 1/(N+1); verdicts are effect-size judgements against a small baseline.",
-  "Image grey levels have been remapped after acquisition (comb histograms); any method relying on raw intensities would be confounded - this system uses BSE phase identity after smoothing and treats ETD/InLens levels as acquisition covariates."
+  "Image grey levels have been remapped after acquisition (comb histograms); any method relying on raw intensities would be confounded - this system uses BSE phase identity after smoothing and treats ETD/InLens levels as acquisition covariates.",
+  "Transport and mechanics indices are 2-D effective-medium quantities computed with a fixed matrix diffusivity D_c = 0.05 and fixed moduli; they are ratios to the baseline under identical assumptions, not electrode tortuosity, conductivity or stress values.",
+  "The deep-pore phase does not percolate in 2-D, so no pore-only tortuosity is reported; the two-conductivity index's absolute level is set by D_c and only its ratios are meaningful.",
+  "Cell-level outputs come from a PyBaMM composite graphite-Si model with a frozen LG-M50-type parameter set and are relative rate-capability and plating-indicator shifts, not predictions of the real cell."
  ],
- "runtime_s": 0.0,
- "notes": [
-  "sample is the only baseline image, so it is compared with itself: the verdict and assignment are a pipeline check only, not evidence"
- ]
+ "runtime_s": 66.3,
+ "simulation": {
+  "grade": {
+   "D_eff_rel_TP": "B",
+   "tau_p": "B",
+   "aniso_ratio": "B",
+   "i_lim_A_m2": "B",
+   "plating_risk_index": "B",
+   "sigma_eff_rel_TP": "B",
+   "swell2.43_buffer_sufficiency_frac": "B",
+   "swell2.43_constraint_index_aw": "B",
+   "swell2.43_dH_H_bound": "B",
+   "icl_raw": "B",
+   "cli_index": "C",
+   "energy_density": "A",
+   "pybamm": "B"
+  },
+  "unstable_across_conventions": [
+   "Q_CC_3C_over_Q_C10 rank: porosity offset vs as-is",
+   "Q_CC_1C_over_Q_C10 rank: porosity offset vs as-is"
+  ],
+  "indices": {
+   "D_eff_rel_TP": {
+    "value": 0.06675094771426572,
+    "baseline_median": 0.05842344544063701,
+    "ratio": 1.1425369936815886,
+    "grade": "B"
+   },
+   "tau_p": {
+    "value": 2.5194268617074584,
+    "baseline_median": 1.9963749824005956,
+    "ratio": 1.2620008184423874,
+    "grade": "B"
+   },
+   "aniso_ratio": {
+    "value": 1.4198113140553923,
+    "baseline_median": 1.2118581773327426,
+    "ratio": 1.1715985753220293,
+    "grade": "B"
+   },
+   "i_lim_A_m2": {
+    "value": null,
+    "baseline_median": null,
+    "ratio": 1.1425369936815886,
+    "grade": "B"
+   },
+   "plating_risk_index": {
+    "value": null,
+    "baseline_median": null,
+    "ratio": 0.8752451828957479,
+    "grade": "B"
+   },
+   "sigma_eff_rel_TP": {
+    "value": 0.1424814984534484,
+    "baseline_median": 0.3017071893985679,
+    "ratio": 0.4722509222848659,
+    "grade": "B"
+   },
+   "swell2.43_buffer_sufficiency_frac": {
+    "value": 0.036231884057971016,
+    "baseline_median": 0.03520545116663225,
+    "ratio": 1.0291555102214291,
+    "grade": "B"
+   },
+   "swell2.43_constraint_index_aw": {
+    "value": 0.8013518214409656,
+    "baseline_median": 0.8129222328273594,
+    "ratio": 0.9857668902151295,
+    "grade": "B"
+   },
+   "swell2.43_dH_H_bound": {
+    "value": 0.04645031254354229,
+    "baseline_median": 0.05687401162026301,
+    "ratio": 0.8167229850723775,
+    "grade": "B"
+   },
+   "icl_raw": {
+    "value": 0.4910981992996007,
+    "baseline_median": 0.4849585286307039,
+    "ratio": 1.0126601973291043,
+    "grade": "B"
+   },
+   "cli_index": {
+    "value": null,
+    "baseline_median": null,
+    "ratio": 0.9629289215555161,
+    "grade": "C"
+   }
+  },
+  "relative_to_baseline": {
+   "D_eff_rel_TP": 1.1425369936815886,
+   "D_eff_rel_IP": 1.3504795145773338,
+   "aniso_ratio": 1.1715985753220293,
+   "tau_p": 1.2620008184423874,
+   "sigma_eff_rel_TP": 0.4722509222848659,
+   "icl_raw": 1.0126601973291043,
+   "swell2.43_pore_closure_frac": 0.6202022641239053,
+   "swell2.43_constraint_index_aw": 0.9857668902151295,
+   "swell2.43_buffer_sufficiency_frac": 1.0291555102214291,
+   "swell2.43_si_touch_frac": 0.8789386647286966,
+   "swell2.43_largest_merged_cluster_ecd_um": 0.9125846112733771,
+   "swell2.43_dH_H_bound": 0.8167229850723775,
+   "t_diffusion_s": 0.875245182895748,
+   "i_lim_A_m2": 1.1425369936815886,
+   "plating_risk_index": 0.8752451828957479,
+   "cli_index": 0.9629289215555161
+  },
+  "bounds": {
+   "D_eff_rel_TP": [
+    0.05907225609842935,
+    0.07416381488701401
+   ],
+   "buffer_sufficiency_frac@2.43": [
+    0.036231884057971016,
+    0.050724637681159424
+   ],
+   "D_eff_rel_TP_ratio": [
+    1.0111053131649277,
+    1.26941871243062
+   ]
+  },
+  "porosity_conventions": {
+   "offset_baseline_to_0.30": {
+    "eps": 0.3408068936544911,
+    "energy_density_ratio": 0.9279044470351353,
+    "Q_CC_1C_over_Q_C10": 0.68873776757227,
+    "Q_CC_3C_over_Q_C10": 0.291853827053499,
+    "min_neg_surface_dphi_sep_3C_V": -0.11139991336331588,
+    "N_P": 0.6121705906663493,
+    "error": null
+   },
+   "deep_pore_as_is": {
+    "eps": 0.16143222793547257,
+    "energy_density_ratio": 0.9396213083741258,
+    "Q_CC_1C_over_Q_C10": 0.6388579395130626,
+    "Q_CC_3C_over_Q_C10": 0.15097984609968354,
+    "min_neg_surface_dphi_sep_3C_V": -0.35477004758779934,
+    "N_P": 0.7787498434023996,
+    "error": null
+   }
+  },
+  "undefined": [],
+  "checks": {
+   "bounds_ordered": true,
+   "strip_bounds_ordered": true,
+   "flux_balance_TP": 2.013489462102011e-11,
+   "downsample_audit_ok": true
+  },
+  "assumptions_hash": "f5d1bb3ceb",
+  "uncertain_frac": 0.07218058701045436
+ },
+ "notes": []
 }

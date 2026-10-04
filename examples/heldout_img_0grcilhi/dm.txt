@@ -1,0 +1,5 @@
+img_0grcilhi → Batch 3 (p=0.58 | B1 0.11 | B2 0.31) — moderately confident, stability 100%
+  vs baseline: ACCEPT (0/16 KPIs > 8σ; rank-p 0.176)
+  why: deep-pore fraction 16.14 % vs 12.06 %±0.75 % (z +5.5); in-plane pore chord 0.898 vs 0.630±0.056 (z +4.8); through-plane pore chord 0.738 vs 0.535±0.043 (z +4.7)
+  reads as: more deep porosity (lower bound); wider in-plane pores
+  novelty: no (in-distribution score 0.13)

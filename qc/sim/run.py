@@ -55,7 +55,24 @@ def per_image(sample, seg, cfg: dict, n_strips: int = 5) -> tuple[dict, dict]:
                ds_components_before=audit["before"]["components"], ds_components_after=audit["after"]["components"])
     tr = sc["transport"]
     undefined = []
-    ion = laplace.ionic_index(maps["mid"], tr["D_c"], tr["solver"])
+    # All sparse solves are independent: run them in a thread pool (SuperLU releases the GIL), then
+    # collect. Results are identical to the serial order; only wall time changes.
+    from concurrent.futures import ThreadPoolExecutor
+
+    def _tp(name, dc, cols=None):
+        m = maps[name] if cols is None else maps[name][:, cols]
+        return laplace.fv_laplace(laplace.cond_map(m, {PORE: 1.0, CARBON: dc, 2: 0.0}), "TP", tr["solver"])
+
+    w = maps["mid"].shape[1]
+    edges = np.linspace(0, w, n_strips + 1).astype(int)
+    pool = ThreadPoolExecutor(max_workers=sc.get("threads", 4))
+    f_ion = pool.submit(laplace.ionic_index, maps["mid"], tr["D_c"], tr["solver"])
+    f_el = pool.submit(laplace.electronic_index, maps["mid"], tr["sigma_si"], tr["solver"])
+    f_sweep = {(name, dc): pool.submit(_tp, name, dc) for dc in tr["D_c_sweep"] for name in ("solid", "mid", "pore")
+               if not (dc == tr["D_c"] and name == "mid")}
+    f_strip = {(i, name): pool.submit(_tp, name, tr["D_c"], slice(a, b))
+               for i, (a, b) in enumerate(zip(edges[:-1], edges[1:])) for name in ("solid", "mid", "pore")}
+    ion = f_ion.result()
     undefined += ion["undefined"]
     row.update({k: ion[k] for k in ("eps_pore", "D_eff_rel_TP", "D_eff_rel_IP", "aniso_ratio", "tau_p", "N_M",
                                     "flux_balance_TP", "flux_balance_IP", "pore_spans_TP", "pore_clusters")})
@@ -65,13 +82,13 @@ def per_image(sample, seg, cfg: dict, n_strips: int = 5) -> tuple[dict, dict]:
             if dc == tr["D_c"] and name == "mid":
                 v = ion["D_eff_rel_TP"]
             else:
-                v = laplace.fv_laplace(laplace.cond_map(maps[name], {PORE: 1.0, CARBON: dc, 2: 0.0}), "TP", tr["solver"]).get("D_eff_rel", np.nan)
+                v = f_sweep[(name, dc)].result().get("D_eff_rel", np.nan)
             sweep[f"{name}@{dc}"] = v
     row["D_eff_rel_TP_solid"] = sweep[f"solid@{tr['D_c']}"]
     row["D_eff_rel_TP_pore"] = sweep[f"pore@{tr['D_c']}"]
     row["bounds_ordered"] = bool(all(sweep[f"solid@{dc}"] <= sweep[f"mid@{dc}"] * (1 + 1e-9) <= sweep[f"pore@{dc}"] * (1 + 1e-9) for dc in tr["D_c_sweep"]))
     row["D_c_sweep"] = sweep
-    el = laplace.electronic_index(maps["mid"], tr["sigma_si"], tr["solver"])
+    el = f_el.result()
     undefined += el["undefined"]
     row.update({k: el[k] for k in ("sigma_eff_rel_TP", "carbon_spanning_frac", "exposed_si_frac")})
     row["icl_raw"] = indices.icl_index(maps["mid"], px)
@@ -95,13 +112,11 @@ def per_image(sample, seg, cfg: dict, n_strips: int = 5) -> tuple[dict, dict]:
         row[f"swell{fa}_buffer_sufficiency_frac_{name}"] = r.get("buffer_sufficiency_frac", np.nan)
         row[f"swell{fa}_constraint_index_{name}"] = r.get("constraint_index", np.nan)
     # per-strip spread (empirical REV) and per-strip checks
-    w = maps["mid"].shape[1]
-    edges = np.linspace(0, w, n_strips + 1).astype(int)
     strip_vals, strip_ok, strip_flux = [], [], []
-    for a, b in zip(edges[:-1], edges[1:]):
+    for i in range(n_strips):
         vals = []
         for name in ("solid", "mid", "pore"):
-            rr = laplace.fv_laplace(laplace.cond_map(maps[name][:, a:b], {PORE: 1.0, CARBON: tr["D_c"], 2: 0.0}), "TP", tr["solver"])
+            rr = f_strip[(i, name)].result()
             vals.append(rr.get("D_eff_rel", np.nan))
             if name == "mid":
                 strip_flux.append(rr.get("flux_balance", np.nan))
@@ -113,6 +128,7 @@ def per_image(sample, seg, cfg: dict, n_strips: int = 5) -> tuple[dict, dict]:
     row["strip_n_undefined"] = int((~np.isfinite(sv)).sum())
     fin = sv[np.isfinite(sv)]
     row["strip_D_eff_rel_TP_cv"] = float(np.std(fin, ddof=1) / np.mean(fin)) if len(fin) > 1 else np.nan
+    pool.shutdown()
     row["strip_bounds_ordered"] = bool(all(strip_ok))
     row["strip_max_flux_imbalance"] = float(np.nanmax(strip_flux)) if strip_flux else np.nan
     row["undefined"] = undefined

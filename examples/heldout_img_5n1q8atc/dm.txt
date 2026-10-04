@@ -1,0 +1,5 @@
+img_5n1q8atc → Batch 1 (p=0.92 | B2 0.07 | B3 0.01) — confident, stability 100%
+  vs baseline: REJECT (3/16 KPIs > 8σ; rank-p 0.056 = floor)
+  why: Si-candidate number density 202,516 vs 26,433±5,008 (z +35.2); Si-candidate loading 20.25 % vs 6.71 %±0.84 % (z +16.1); Si-candidate/pore contact 7.40 % vs 1.71 %±0.70 % (z +8.1)
+  reads as: more Si-candidate particles per area (finer or more loaded); more Si-candidate in the solid
+  novelty: YES — far from all known batches (id-score 0.06); betting on nearest

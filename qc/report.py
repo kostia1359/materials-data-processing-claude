@@ -90,7 +90,7 @@ def build_verdict_json(res, st, model, v, g, a, cfg, held_out_note, elapsed, sim
         "baseline": {"batch": 3, "n_images": st.get("n"), "version": st.get("version")},
         "acquisition_gates": {"status": g["status"], "flags": g["flags"], "z": g["z"], "values": res.gates},
         "verdict_vs_baseline": {k: v[k] for k in ("decision", "reasons", "aggregate_score_S", "conformal_rank_p", "p_floor",
-                                                   "n_kpis_beyond_2_5", "defect_alarms")} | {"drivers": v["drivers"]},
+                                                   "n_kpis_beyond_2_5", "defect_alarms", "zones")} | {"drivers": v["drivers"]},
         "batch_assignment": {k: a[k] for k in ("assigned_batch", "probabilities", "distances", "stability", "strip_agreement",
                                                "confidence_label", "novelty_flag", "in_distribution_score", "signature_match",
                                                "signature_kpis_matched", "signature_kpis_missed", "beyond_labelled_range", "priors")}
@@ -295,7 +295,7 @@ def lead_paragraph(vj: dict, model: dict) -> str:
     dec = v["decision"]
     n25 = v["n_kpis_beyond_2_5"]
     head = "within the baseline distribution" if dec == "ACCEPT" else "different from the baseline"
-    s += f" **Relative to the Batch-3 baseline it is {head} — verdict {dec}**: {n25} of {len(SHORTLIST)} KPIs exceed 2.5 robust σ."
+    s += f" **Relative to the Batch-3 baseline it is {head} — verdict {dec}**: {n25} of {len(SHORTLIST)} KPIs exceed the investigate zone ({v['zones']['investigate']:g} robust σ; reject at {v['zones']['reject']:g})."
     drv = v["drivers"][:3]
     if drv:
         s += " Largest shifts: " + "; ".join(
@@ -320,7 +320,7 @@ def dm_block(vj: dict, model: dict) -> str:
     l1 = f"{vj['sample_id']} → Batch {b} (p={p[b]:.2f} | {others}) — {a['confidence_label']}, stability {100 * (stab or 0):.0f}%"
     rp = v.get("conformal_rank_p")
     rp_s = f"rank-p {rp:.3f}" + (" = floor" if rp is not None and abs(rp - v["p_floor"]) < 1e-9 else "") if rp is not None else "rank-p n/a"
-    l2 = f"  vs baseline: {v['decision']} ({v['n_kpis_beyond_2_5']}/{len(SHORTLIST)} KPIs > 2.5σ; {rp_s})"
+    l2 = f"  vs baseline: {v['decision']} ({v['n_kpis_beyond_2_5']}/{len(SHORTLIST)} KPIs > {v['zones']['investigate']:g}σ; {rp_s})"
     drv = v["drivers"][:3]
     l3 = "  why: " + "; ".join(f"{short(d['kpi'])} {fmt(d['value'], d['kpi'])} vs {fmt(d['baseline_median'], d['kpi'])}±{fmt(d['baseline_scale'], d['kpi'])} (z {d['z']:+.1f})" for d in drv)
     big = [d for d in drv if abs(d["z"]) > 2]
@@ -338,16 +338,18 @@ def dm_block(vj: dict, model: dict) -> str:
 # ------------------------------------------------------------------ figures
 
 def fig_zbars(vj: dict, path: Path):
+    zn = vj["verdict_vs_baseline"].get("zones") or {"investigate": 2.5, "reject": 4.0}
+    zi, zr = zn["investigate"], zn["reject"]
     z = {k: vj["kpis"][k]["z"] for k in SHORTLIST if k in vj["kpis"] and vj["kpis"][k]["z"] is not None}
     ks = sorted(z, key=lambda k: abs(z[k]))
     fig, ax = plt.subplots(figsize=(7, 0.32 * len(ks) + 1.2))
-    ax.axvspan(-2.5, 2.5, color="#e8f3ea", zorder=0)
-    for lo, hi in ((2.5, 4), (-4, -2.5)):
+    ax.axvspan(-zi, zi, color="#e8f3ea", zorder=0)
+    for lo, hi in ((zi, zr), (-zr, -zi)):
         ax.axvspan(lo, hi, color="#fff2d6", zorder=0)
-    lim = max(5, max((abs(v) for v in z.values()), default=0) + 0.5)
-    for lo, hi in ((4, lim), (-lim, -4)):
+    lim = max(zr + 1, max((abs(v) for v in z.values()), default=0) + 0.5)
+    for lo, hi in ((zr, lim), (-lim, -zr)):
         ax.axvspan(lo, hi, color="#fbe0de", zorder=0)
-    cols = ["#c0392b" if abs(z[k]) > 4 else "#d68910" if abs(z[k]) > 2.5 else "#4a6b8a" for k in ks]
+    cols = ["#c0392b" if abs(z[k]) > zr else "#d68910" if abs(z[k]) > zi else "#4a6b8a" for k in ks]
     ax.barh([f"{short(k)} [{rclass(k)}]" for k in ks], [z[k] for k in ks], color=cols)
     ax.axvline(0, color="k", lw=0.8)
     ax.set_xlim(-lim, lim)
@@ -638,7 +640,8 @@ def write_reports(vj, res, st, model, base, rdir: Path, cache_dir: Path):
         shutil.copy(cache_dir / "overlay.png", rdir / "overlay.png")
         figs["Segmentation overlay (blue = deep pore, orange = Si-candidate, red = crack skeleton; 4× downscaled)"] = "overlay.png"
     fig_zbars(vj, rdir / "zbars.png")
-    figs["Robust z-scores vs baseline (green < 2.5σ, amber 2.5–4σ, red > 4σ)"] = "zbars.png"
+    zn = vj["verdict_vs_baseline"].get("zones") or {"investigate": 2.5, "reject": 4.0}
+    figs[f"Robust z-scores vs baseline (green < {zn['investigate']:g}σ, amber {zn['investigate']:g}–{zn['reject']:g}σ, red > {zn['reject']:g}σ)"] = "zbars.png"
     if fig_pca(base["df"], model, st, cfg, vj, rdir / "pca.png"):
         figs["Where the sample sits among labelled images (PCA of standardised KPIs)"] = "pca.png"
     fig_distributions(res, st, base["out"], rdir / "distributions.png")

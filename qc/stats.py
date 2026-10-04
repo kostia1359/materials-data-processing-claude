@@ -124,7 +124,8 @@ def verdict(x: dict, stats: dict, cfg: dict, s_baseline: list[float] | None = No
         drivers.append(dict(kpi=k, value=x.get(k), baseline_median=s["med"], baseline_scale=s["scale"], z=zs[k],
                             direction=direction, robustness=rclass(k), unit=unit(k), meaning=meaning(k, direction)))
     return dict(decision=decision, reasons=reasons, aggregate_score_S=S, conformal_rank_p=p_rank, p_floor=p_floor,
-                n_kpis_beyond_2_5=int(n_25), n_kpis_beyond_2=int(n_2), defect_alarms=defects, drivers=drivers, z_all=z)
+                n_kpis_beyond_2_5=int(n_25), n_kpis_beyond_2=int(n_2), defect_alarms=defects, drivers=drivers, z_all=z,
+                zones=dict(investigate=zc["investigate"], reject=zc["reject"]))
 
 
 def gate_status(gates: dict, stats: dict, cfg: dict) -> dict:

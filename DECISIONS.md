@@ -81,3 +81,13 @@ One line per judgment call: **what** — why — alternative considered. Post-ho
 - **N/P from the parameter set is a cmax-based theoretical ratio (≈ 0.75 at the project mapping, 0.68 as shipped)** — reported only relative to baseline.
 - **`fft_elastic.py` (stretch) and porespy wetting not built** (time-boxed; wetting index skipped with a flag as the brief allows).
 - **Verdict zones raised to investigate 8.0 / reject 12.8 (count rules scaled with them)** — the only tuning brief 6.2 allows (to remove baseline false alarms, never to add detections). Held-out baseline false alarms: 8/17 at the brief's 2.5/4.0 → 4/17 at 4–6 → 1/17 at 8 (the remaining one, `ufdvpb81`, is the crack-count defect rule: it holds the baseline's largest crack count, so with itself left out it exceeds the maximum). Detections fall from 7/14 to 2/14 (the two SiOx-like Batch_1 samples). Cause: deep-pore fraction and crack density are heavy-tailed across the 17 baseline images, so a robust MAD scale of their core makes the tails look like 5–12σ. The full trade-off table is `out/zone_tradeoff.csv` and VALIDATION.md §1. Batch assignment is unaffected (it does not use the zones).
+- **Simulation solves run in a thread pool (4 threads)** — results bit-identical to the serial order (checked on img_r17byphk); per-image simulation 57 s instead of ≈ 90–120 s, bringing the slowest cold `evaluate` from 193 s to 122 s.
+- **Report text quotes the zones in use** (it said "> 2.5σ" while counting against the tuned 8σ zone).
+
+## Dry run (brief 6.4): one held-out sample per batch, baseline rebuilt on the other 30, cold evaluate
+| held out | true | bet | p | verdict | cold evaluate |
+|---|---|---|---|---|---|
+| img_0grcilhi | 3 | 3 | 0.58 | ACCEPT | 168 s (before thread pool) |
+| img_5n1q8atc | 1 | 1 | 0.92 | REJECT | 155 s (before thread pool) |
+| img_r17byphk | 2 | 3 | 0.61 | ACCEPT | 193 s → 122 s after thread pool |
+Reports (HTML with all figures embedded) are in `examples/heldout_img_*`.
