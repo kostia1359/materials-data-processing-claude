@@ -44,9 +44,15 @@ def compare(old: pd.DataFrame, new: pd.DataFrame, stats: dict, abs_tol_scale: fl
     new = new.set_index("sample_id")
     common = [s for s in new.index if s in old.index]
     changes = []
+    baseline_driven = []
     for sid in common:
+        thr_changed = ("crack_threshold" in old.columns and "crack_threshold" in new.columns
+                       and not np.isclose(float(old.at[sid, "crack_threshold"]), float(new.at[sid, "crack_threshold"])))
         for k in KPI_NAMES:
             if k not in new.columns or k not in old.columns:
+                continue
+            if thr_changed and k.startswith("crack_"):
+                baseline_driven.append(dict(sample_id=sid, kpi=k, old=float(old.at[sid, k]), new=float(new.at[sid, k])))
                 continue
             a, b = float(old.at[sid, k]), float(new.at[sid, k])
             if not np.isfinite(a) and not np.isfinite(b):
@@ -62,7 +68,8 @@ def compare(old: pd.DataFrame, new: pd.DataFrame, stats: dict, abs_tol_scale: fl
             if bad:
                 changes.append(dict(sample_id=sid, kpi=k, old=a, new=b, delta_scale=ds, rel=rel))
     return dict(common=common, new_samples=[s for s in new.index if s not in old.index],
-                missing=[s for s in old.index if s not in new.index], changes=pd.DataFrame(changes))
+                missing=[s for s in old.index if s not in new.index], changes=pd.DataFrame(changes),
+                baseline_driven=pd.DataFrame(baseline_driven))
 
 
 def run(out: Path, accept: bool = False, log=print) -> int:
@@ -86,6 +93,9 @@ def run(out: Path, accept: bool = False, log=print) -> int:
     ch = res["changes"]
     log(f"regress vs {last.name}: {len(res['common'])} common samples, {len(res['new_samples'])} new "
         f"({', '.join(res['new_samples']) or '-'}), {len(res['missing'])} missing; {len(ch)} behaviour change(s)")
+    if len(res["baseline_driven"]):
+        log(f"  ({len(res['baseline_driven'])} crack-KPI changes are baseline-driven: the crack threshold moved with the "
+            "baseline membership; not counted until it is frozen)")
     if len(ch):
         summ = ch.groupby("kpi").agg(n=("sample_id", "size"), max_delta_scale=("delta_scale", "max")).sort_values("n", ascending=False)
         log(summ.to_string())

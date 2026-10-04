@@ -34,8 +34,15 @@ STAGE_SOURCES = {
 }
 
 
+# config keys used only after the per-image KPIs (statistics, decisions, validation) — changing them
+# must not invalidate the image-level cache
+_POST_KPI_KEYS = {"sim", "crack_threshold_frozen", "zones", "weights", "shrinkage_grid", "temperature_grid", "gate_caution_z",
+                  "signature_min_effect", "signature_min_stability", "scale_rel_floor", "scale_abs_floor",
+                  "validation_sensitivity_samples_per_batch", "manual_masks"}
+
+
 def _cfg_core(cfg: dict) -> dict:
-    return {k: v for k, v in cfg.items() if k != "sim"}
+    return {k: v for k, v in cfg.items() if k not in _POST_KPI_KEYS}
 
 
 def stage_version(stage: str, cfg: dict) -> str:
@@ -149,6 +156,9 @@ def analyze_sample(files: SampleFiles, cfg: dict, cache_dir: Path | None = None,
     plain = t_shift == (0.0, 0.0) and downsample == 1
     use_cache = sdir is not None and plain
     fp = files.fingerprint()
+    man = (cfg.get("manual_masks") or {}).get(files.sample_id)
+    if man:  # a manual mask invalidates only its own sample's cache
+        fp = fp + ":" + hashlib.sha1(json.dumps(man, sort_keys=True).encode()).hexdigest()[:6]
     kv = stage_version("kpis", cfg)
     if use_cache and not force:
         cached = load_cached(sdir, fp, kv)

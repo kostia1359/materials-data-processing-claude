@@ -50,6 +50,8 @@ def results_frame(results: list[SampleResult]) -> pd.DataFrame:
         for k in GATE_KEYS:
             row[k] = r.gates.get(k, np.nan)
         row["gate_flags"] = r.gates.get("gate_flags", "")
+        row["crack_threshold"] = r.info.get("crack_threshold")
+        row["kpi_version"] = r.info.get("kpi_version")
         row["flags"] = ";".join(r.info.get("flags", []))
         rows.append(row)
     return pd.DataFrame(rows)
@@ -63,7 +65,9 @@ def strips_frame(results: list[SampleResult]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def crack_threshold_from(results: list[SampleResult]) -> float:
+def crack_threshold_from(results: list[SampleResult], cfg: dict | None = None) -> float:
+    if cfg and cfg.get("crack_threshold_frozen") is not None:
+        return float(cfg["crack_threshold_frozen"])
     base = [r.info["sato_p995"] for r in results if str(r.batch) == stats_mod.BASELINE_BATCH and r.info.get("sato_p995") is not None]
     if not base:
         base = [r.info["sato_p995"] for r in results if r.info.get("sato_p995") is not None]
@@ -91,7 +95,7 @@ def build_baseline(data: Path, out: Path, cfg: dict, log=print, workers=None) ->
     log(f"{len(samples)} samples: " + ", ".join(f"batch {b}: {n}" for b, n in man["batch"].value_counts().sort_index().items()))
     cache = out / "cache"
     results = analyze_all(samples, cfg, cache, workers, log)
-    thr = crack_threshold_from(results)
+    thr = crack_threshold_from(results, cfg)
     for r in results:
         if r.info.get("crack_threshold") != thr:
             finalize_cracks(r, cache / r.sample_id, thr, cfg)

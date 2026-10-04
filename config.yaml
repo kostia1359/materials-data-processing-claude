@@ -20,6 +20,7 @@ crack_sato_sigmas: [1, 2, 3]
 crack_min_length_px: 80
 crack_max_width_px: 6
 crack_threshold_default_quantile: 99.5
+crack_threshold_frozen: 12.0703   # frozen 2026-10-04 from all 17 baseline images (median of per-image 99.5th pct Sato response)
 curtaining_exclusion_deg: 10
 curtaining_search_deg: [50, 80]
 curtaining_min_strength: 3.0   # peak/median angular Fourier power needed to call curtaining present
