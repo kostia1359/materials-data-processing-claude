@@ -141,18 +141,18 @@ def validate(data: Path = typer.Option(...), out: Path = typer.Option(Path("out"
     counts = df[df["batch"].isin(["1", "2", "3"])]["batch"].value_counts().to_dict()
     within = V.within_gate_separation(df)
     abl = None if skip_sensitivity or not (out / "sim.csv").exists() else V.sim_ablations(discover(data), cfg, out, log=typer.echo)
-    extra = []
+    top = []
     if (out / "zone_tradeoff.csv").exists():
-        extra += ["## 1b. Verdict zones: false alarms vs detections (held-out baseline, LOO baseline stats)", "",
+        top += ["## 1b. Verdict zones: false alarms vs detections (held-out baseline, LOO baseline stats)", "",
                   pd.read_csv(out / "zone_tradeoff.csv").to_markdown(index=False), "",
                   f"Zones in use: {cfg['zones']} (chosen as the smallest setting with ≤ 1 baseline false alarm; brief 6.2 allows moving "
                   "them only for that purpose). Section 1 reports the verdicts at the zones in use.", ""]
     if (out / "loio_variants.csv").exists():
-        extra += ["## 1c. Pre-declared model variants (each fully nested LOIO; the brief's model is the first row)", "",
+        top += ["## 1c. Pre-declared model variants (each fully nested LOIO; the brief's model is the first row)", "",
                   pd.read_csv(out / "loio_variants.csv").to_markdown(index=False, floatfmt=".3f"), "",
                   "`si_bse_contrast` is a post-hoc KPI (DECISIONS.md); a variant using it is reported next to, not instead of, the brief's model.", ""]
-    extra += V.sim_validation_md(out, abl)
-    V.write_validation_md(validation_md, loio, shadow, eff, sens, synth, counts, base["stats"], base["model"], within, extra)
+    extra = V.sim_validation_md(out, abl)
+    V.write_validation_md(validation_md, loio, shadow, eff, sens, synth, counts, base["stats"], base["model"], within, extra, top)
     if loio.get("table") is not None and len(loio["table"]):
         loio["table"].to_csv(out / "loio.csv", index=False)
     if sens is not None:
