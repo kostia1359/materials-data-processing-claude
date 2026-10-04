@@ -190,6 +190,12 @@ def analyze_sample(files: SampleFiles, cfg: dict, cache_dir: Path | None = None,
         resp = np.load(sdir / "sato.npy")
     stages["sato"] = "cached" if resp is not None else "computed"
     ctx = build_ctx(sample, seg, cfg, crack_threshold, crack_resp=resp)
+    raw_resp = ctx.crack_resp
+    # Noise-normalised ridge response: robust z against carbon-interior pixels of the same image. With an
+    # absolute threshold, crack density tracked BSE noise with Spearman rho = 0.98 inside the baseline
+    # (noisier sessions -> more noise ridges); see DECISIONS.md.
+    sato_med, sato_mad = sato_noise_stats(raw_resp, seg)
+    ctx.crack_resp = ((raw_resp.astype(np.float32) - sato_med) / sato_mad).astype(np.float16)
     resp = ctx.crack_resp
     kpis, lists = tiles.compute_kpis(ctx)
     kpis["pore_frac_slope_per_level"] = pore_threshold_slope(seg.bse_s, seg.etd_s, seg.t1, seg.t2, cfg)
@@ -201,7 +207,7 @@ def analyze_sample(files: SampleFiles, cfg: dict, cache_dir: Path | None = None,
         fingerprint=fp, kpi_version=kv, cache_version=CACHE_VERSION, stages=stages, flags=sample.flags, crop=sample.crop,
         shape=list(sample.bse.shape), raw_shape=list(sample.raw_shape), px_nm=sample.px_nm, px_nm_assumed=sample.px_nm_assumed,
         etd_is_se=files.etd_is_se, has_batch_prefix=files.has_batch_prefix, complete=files.complete, t_shift=list(t_shift),
-        downsample=downsample, crack_threshold=crack_threshold,
+        downsample=downsample, crack_threshold=crack_threshold, sato_c_med=sato_med, sato_c_mad=sato_mad,
         sato_p995=float(np.percentile(resp[::2, ::2].astype(np.float32), cfg["crack_threshold_default_quantile"])) if resp is not None else None,
         curtain_deg=ctx.curtain_deg, curtain_measured_deg=ctx.extras.get("curtain_measured_deg"),
         curtain_strength=ctx.extras.get("curtain_strength"),
@@ -215,7 +221,7 @@ def analyze_sample(files: SampleFiles, cfg: dict, cache_dir: Path | None = None,
         if stages["seg"] == "computed":
             _seg_to_npz(seg, sdir / "seg.npz", seg_key)
         if stages["sato"] == "computed":
-            np.save(sdir / "sato.npy", resp)
+            np.save(sdir / "sato.npy", raw_resp)
             (sdir / "sato.key").write_text(sato_key)
         save_overlay(sample.bse, seg, ctx.extras.get("crack_skeleton"), sdir / "overlay.png")
         save_cached(res, sdir)
@@ -261,9 +267,19 @@ def load_cached(sdir: Path, fingerprint: str | None = None, kpi_version: str | N
     return SampleResult(d["sample_id"], d["batch"], d["kpis"], d["kpi_se"], d["kpi_ci"], d["strips"], d["gates"], d["info"], lists)
 
 
+def sato_noise_stats(resp: np.ndarray, seg) -> tuple[float, float]:
+    from scipy import ndimage as ndi
+
+    core = ndi.binary_erosion(seg.carbon, iterations=3)
+    v = resp[core][::7].astype(np.float32) if core.any() else resp.ravel()[::7].astype(np.float32)
+    med = float(np.median(v))
+    mad = float(1.4826 * np.median(np.abs(v - med)))
+    return med, max(mad, 1e-6)
+
+
 def finalize_cracks(res: SampleResult, sdir: Path, thr: float, cfg: dict):
-    """Recompute crack KPIs (image + strips) from the cached Sato response at threshold `thr`."""
-    resp = np.load(sdir / "sato.npy")
+    """Recompute crack KPIs (image + strips) from the cached Sato response at threshold `thr` (z units)."""
+    resp = ((np.load(sdir / "sato.npy").astype(np.float32) - res.info["sato_c_med"]) / res.info["sato_c_mad"])
     area_mm2 = res.kpis["area_mm2"]
     px_um = res.info["px_nm"] / 1000
     curtain = res.info.get("curtain_deg")
@@ -289,3 +305,27 @@ def finalize_cracks(res: SampleResult, sdir: Path, thr: float, cfg: dict):
         ck = ndi.binary_dilation(kept, iterations=2)[::f, ::f][: rgb.shape[0], : rgb.shape[1]]
         rgb[: ck.shape[0], : ck.shape[1]][ck] = [230, 20, 60]
         plt.imsave(ov, rgb)
+
+
+def analyze_sim(files: SampleFiles, cfg: dict, cache_dir: Path, force: bool = False) -> dict:
+    """Section 10 per-image stage, cached as out/cache/<id>/sim.json (+ sim_maps.npz). Additive: reads the
+    cached segmentation, never modifies the KPI result."""
+    from .sim import run as sim_run
+
+    sdir = Path(cache_dir) / files.sample_id
+    fp = files.fingerprint()
+    key = f"{fp}:{stage_version('seg', cfg)}:{sim_run.sim_stage_version(cfg)}"
+    p = sdir / "sim.json"
+    if p.exists() and not force:
+        d = json.loads(p.read_text())
+        if d.get("key") == key:
+            return _unclean(d["row"])
+    sample = load_sample(files, cfg)
+    seg = _seg_from_npz(sdir / "seg.npz", f"{fp}:{stage_version('seg', cfg)}", sample, cfg)
+    if seg is None:
+        seg = seg_mod.segment(sample.bse, sample.etd, cfg, px_nm=sample.px_nm)
+    row, maps = sim_run.per_image(sample, seg, cfg, cfg["strips"])
+    sdir.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(dict(key=key, row=_clean(row))))
+    np.savez_compressed(sdir / "sim_maps.npz", **{k: v for k, v in maps.items() if isinstance(v, np.ndarray)})
+    return row

@@ -25,6 +25,9 @@ CAVEATS = [
     "Pixel size (25 nm/px) is taken from the TIFF resolution tags; vendor metadata is absent, so it is unverified.",
     "With N baseline images the smallest achievable rank p-value is 1/(N+1); verdicts are effect-size judgements against a small baseline.",
     "Image grey levels have been remapped after acquisition (comb histograms); any method relying on raw intensities would be confounded - this system uses BSE phase identity after smoothing and treats ETD/InLens levels as acquisition covariates.",
+    "Transport and mechanics indices are 2-D effective-medium quantities computed with a fixed matrix diffusivity D_c = 0.05 and fixed moduli; they are ratios to the baseline under identical assumptions, not electrode tortuosity, conductivity or stress values.",
+    "The deep-pore phase does not percolate in 2-D, so no pore-only tortuosity is reported; the two-conductivity index's absolute level is set by D_c and only its ratios are meaningful.",
+    "Cell-level outputs come from a PyBaMM composite graphite-Si model with a frozen LG-M50-type parameter set and are relative rate-capability and plating-indicator shifts, not predictions of the real cell.",
 ]
 NOT_MEASURABLE = ["coating thickness", "surface roughness", "collector delamination", "binder/carbon-black distribution",
                   "Si vs SiOx identity", "true (total) porosity"]
@@ -69,7 +72,7 @@ def fmt_u(v, k):
 
 # ------------------------------------------------------------------ verdict JSON
 
-def build_verdict_json(res, st, model, v, g, a, cfg, held_out_note, elapsed) -> dict:
+def build_verdict_json(res, st, model, v, g, a, cfg, held_out_note, elapsed, sim_block=None) -> dict:
     kp = {}
     z = v["z_all"]
     for k in KPI_META:
@@ -98,11 +101,151 @@ def build_verdict_json(res, st, model, v, g, a, cfg, held_out_note, elapsed) -> 
         "not_measurable": NOT_MEASURABLE,
         "caveats": CAVEATS,
         "runtime_s": round(elapsed, 1),
+        "simulation": sim_public(sim_block),
+        "_sim_internal": sim_block,
         "notes": [n for n in [held_out_note] if n],
         "_assign_internal": {"bootstrap_points": a["bootstrap_points"], "feature_vector": a["feature_vector"],
                              "strip_calls": a["strip_calls"]},
     }
     return _clean(out)
+
+
+# ------------------------------------------------------------------ simulation layer
+
+SIM_TABLE = [
+    ("D_eff_rel_TP", "Through-plane electrolyte transport (2-conductivity D_eff)", "higher = easier ionic transport"),
+    ("tau_p", "Through-plane tortuosity index", "higher = more tortuous"),
+    ("aniso_ratio", "In-plane / through-plane transport anisotropy", "higher = more aligned (calendering)"),
+    ("i_lim_A_m2", "Limiting current proxy", "higher = better fast charge"),
+    ("plating_risk_index", "Plating-risk ionic-resistance ratio", "higher = more plating risk"),
+    ("sigma_eff_rel_TP", "Electronic network conductance (Si insulating)", "higher = better wired"),
+    ("swell2.43_buffer_sufficiency_frac", "Swelling: particles with enough pore buffer (full lithiation)", "higher = better"),
+    ("swell2.43_constraint_index_aw", "Swelling: constraint index (area-weighted)", "higher = more matrix displaced"),
+    ("swell2.43_dH_H_bound", "Swelling: 2-D thickness-change bound", "higher = more electrode swelling"),
+    ("icl_raw", "First-cycle-loss proxy (exposed interface)", "higher = more SEI"),
+    ("cli_index", "Cycle-life index (heuristic)", "higher = worse"),
+]
+
+
+def sim_public(sim_block):
+    if not sim_block:
+        return None
+    rel = sim_block["relative_to_baseline"]
+    row = sim_block["row"]
+    med = sim_block["baseline"]["median"]
+    idx = {}
+    for k, _, _ in SIM_TABLE:
+        idx[k] = dict(value=row.get(k), baseline_median=med.get(k), ratio=rel.get(k) if k in rel else None, grade=sim_block["grade"].get(k, "B"))
+    conv = {}
+    for c, d in sim_block["conventions"].items():
+        pt = (d.get("pybamm") or {}).get("point", {})
+        conv[c] = dict(eps=d["eps"], energy_density_ratio=d.get("energy_density_ratio"),
+                       **{k: pt.get(k) for k in ("Q_CC_1C_over_Q_C10", "Q_CC_3C_over_Q_C10", "min_neg_surface_dphi_sep_3C_V", "N_P")},
+                       error=d.get("pybamm_error"))
+    return dict(grade={k: v["grade"] for k, v in idx.items()} | {"energy_density": "A", "pybamm": "B"},
+                indices=idx, relative_to_baseline=rel, bounds=sim_block["bounds"], porosity_conventions=conv,
+                undefined=sim_block["undefined"], checks=sim_block["checks"], assumptions_hash=sim_block["assumptions_hash"],
+                uncertain_frac=row.get("uncertain_frac"))
+
+
+def sim_table_md(vj) -> str:
+    s = vj.get("simulation")
+    if not s:
+        return ""
+    L = ["| index | grade | value | baseline median | ratio | bound interval (L_solid … L_pore) |", "|---|---|---|---|---|---|"]
+    for k, label, note in SIM_TABLE:
+        d = s["indices"].get(k) or {}
+        b = ""
+        if k == "D_eff_rel_TP":
+            lo, hi = s["bounds"].get("D_eff_rel_TP", [None, None])
+            b = f"{fmt(lo)} … {fmt(hi)}"
+        if k == "swell2.43_buffer_sufficiency_frac":
+            lo, hi = s["bounds"].get("buffer_sufficiency_frac@2.43", [None, None])
+            b = f"{fmt(lo)} … {fmt(hi)}"
+        ratio_s = "n/a" if d.get("ratio") is None else f"{d['ratio']:.2f}×"
+        L.append(f"| {label} ({note}) | {d.get('grade', 'B')} | {fmt(d.get('value'))} | {fmt(d.get('baseline_median'))} | "
+                 f"{ratio_s} | {b} |")
+    for c, d in s["porosity_conventions"].items():
+        L.append(f"| Energy density ratio [{c}] | A | ε = {fmt(d['eps'])} |  | {fmt(d.get('energy_density_ratio'))}× |  |")
+        if d.get("Q_CC_3C_over_Q_C10") is not None:
+            L.append(f"| PyBaMM 1C / 3C CC-charge capacity [{c}] | B | {fmt(d.get('Q_CC_1C_over_Q_C10'))} / {fmt(d.get('Q_CC_3C_over_Q_C10'))} |  |  |  |")
+            L.append(f"| PyBaMM min negative surface Δφ at separator, 3C (V; < 0 = plating indicator) [{c}] | B | {fmt(d.get('min_neg_surface_dphi_sep_3C_V'))} |  |  |  |")
+        elif d.get("error"):
+            L.append(f"| PyBaMM [{c}] | B | undefined: {d['error'][:80]} |  |  |  |")
+    if s.get("undefined"):
+        L.append("")
+        L.append("Undefined (refused) solves: " + "; ".join(s["undefined"]))
+    L.append("")
+    L.append(f"Checks: bounds ordered {s['checks'].get('bounds_ordered')}, per-strip ordered {s['checks'].get('strip_bounds_ordered')}, "
+             f"flux imbalance {s['checks'].get('flux_balance_TP'):.1e}, downsampling audit ok {s['checks'].get('downsample_audit_ok')}; "
+             f"uncertain pixels {100 * (s.get('uncertain_frac') or 0):.1f} %; assumptions hash {s['assumptions_hash']}. "
+             "Grades: A = arithmetic on measured quantities; B = direction supported, level set by an assumption (ratios only); C = heuristic.")
+    return "\n".join(L)
+
+
+def fig_sim_sweep(vj, path: Path) -> bool:
+    sb = vj.get("_sim_internal")
+    if not sb:
+        return False
+    sweep = sb["row"].get("D_c_sweep") or {}
+    band = sb["baseline"].get("D_c_sweep") or {}
+    dcs = sorted({float(k.split("@")[1]) for k in sweep})
+    if not dcs:
+        return False
+    fig, ax = plt.subplots(figsize=(6, 4))
+    if band:
+        med = [band.get(f"mid@{d}", {}).get("median", np.nan) for d in dcs]
+        lo = [band.get(f"mid@{d}", {}).get("p10", np.nan) for d in dcs]
+        hi = [band.get(f"mid@{d}", {}).get("p90", np.nan) for d in dcs]
+        ax.fill_between(dcs, lo, hi, color=BATCH_COLORS["3"], alpha=0.25, label="baseline 10–90 %")
+        ax.plot(dcs, med, color=BATCH_COLORS["3"], lw=1.5, label="baseline median")
+    mid = [sweep.get(f"mid@{d}", np.nan) for d in dcs]
+    lo = [sweep.get(f"solid@{d}", np.nan) for d in dcs]
+    hi = [sweep.get(f"pore@{d}", np.nan) for d in dcs]
+    ax.errorbar(dcs, mid, yerr=[np.subtract(mid, lo), np.subtract(hi, mid)], color="#e6194b", marker="o", capsize=4,
+                label=f"{vj['sample_id']} (bars: L_solid … L_pore)")
+    ax.set_xscale("log")
+    ax.set_xlabel("assumed carbon-matrix diffusivity D_c (relative)")
+    ax.set_ylabel("through-plane D_eff / D (2-D index)")
+    ax.set_title("Transport index vs assumption D_c (ratios to baseline are what matter)")
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(path, dpi=110)
+    plt.close(fig)
+    return True
+
+
+def fig_swelling(cache_dir: Path, path: Path) -> bool:
+    p = cache_dir / "sim_maps.npz"
+    if not p.exists():
+        return False
+    z = np.load(p)
+    if "swollen" not in z.files:
+        return False
+    mid, sw, ci = z["mid"], z["swollen"], z["constraint_map"]
+    w = min(mid.shape[1], 450)
+
+    def rgb(lab):
+        c = np.array([[40, 90, 220], [70, 70, 70], [245, 140, 20], [200, 200, 200]], np.uint8)
+        return c[np.clip(lab, 0, 3)]
+
+    fig, axs = plt.subplots(3, 1, figsize=(10, 7.5))
+    axs[0].imshow(rgb(mid[:, :w]))
+    axs[0].set_title("before (×4 fused map: blue pore, grey carbon, orange Si-candidate)")
+    grown = (sw[:, :w] == 2) & (mid[:, :w] != 2)
+    im = rgb(sw[:, :w]).copy()
+    im[grown] = [255, 215, 0]
+    axs[1].imshow(im)
+    axs[1].set_title("after full-lithiation swelling f_A = 2.43, pore-first (yellow = grown area)")
+    m = axs[2].imshow(np.where(np.isnan(ci[:, :w]), np.nan, ci[:, :w]), cmap="magma_r", vmin=0, vmax=1)
+    axs[2].set_title("per-particle constraint index (share of growth that displaces carbon matrix)")
+    fig.colorbar(m, ax=axs[2], fraction=0.02)
+    for a in axs:
+        a.axis("off")
+    fig.tight_layout()
+    fig.savefig(path, dpi=100)
+    plt.close(fig)
+    return True
 
 
 # ------------------------------------------------------------------ text
@@ -387,6 +530,9 @@ def build_markdown(vj, st, model, figs: dict) -> str:
     md += ["", "## 6. Figures", ""]
     for title, name in figs.items():
         md += [f"**{title}**", "", f"![{title}]({name})", ""]
+    st_md = sim_table_md(vj)
+    if st_md:
+        md += ["## 6b. Simulation layer — relative performance indices (ratios to baseline, frozen assumptions)", "", st_md, ""]
     md += ["## 7. Not measurable from these images", "", ", ".join(vj["not_measurable"]) + ".", "", "## Caveats", ""]
     md += [f"{i + 1}. {c}" for i, c in enumerate(vj["caveats"])]
     if vj.get("notes"):
@@ -494,9 +640,13 @@ def write_reports(vj, res, st, model, base, rdir: Path, cache_dir: Path):
     if sig_png.exists():
         shutil.copy(sig_png, rdir / "signatures.png")
         figs["Batch signatures (what makes batches 1 and 2 different from baseline)"] = "signatures.png"
+    if fig_sim_sweep(vj, rdir / "sim_sweep.png"):
+        figs["Simulation: transport index vs assumed D_c, with L_solid/L_pore bounds, over the baseline band"] = "sim_sweep.png"
+    if fig_swelling(cache_dir, rdir / "swelling.png"):
+        figs["Simulation: Si-candidate swelling before/after and per-particle constraint"] = "swelling.png"
     md = build_markdown(vj, st, model, figs)
     (rdir / "report.md").write_text(md)
     (rdir / "report.html").write_text(md_to_html(md, rdir, f"QC {vj['sample_id']}"))
-    pub = {k: v for k, v in vj.items() if not k.startswith("_")}
+    pub = _clean({k: v for k, v in vj.items() if not k.startswith("_")})
     (rdir / "verdict.json").write_text(json.dumps(pub, indent=1))
     (rdir / "dm.txt").write_text(dm_block(vj, model) + "\n")

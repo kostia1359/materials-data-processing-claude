@@ -20,11 +20,12 @@ app = typer.Typer(add_completion=False, help="Si-graphite anode SEM batch-QC")
 @app.command("build-baseline")
 def build_baseline(data: Path = typer.Option(..., help="data folder (Batch_1/, Batch_2/, Batch_3/ ...)"),
                    out: Path = typer.Option(Path("out")), config: Path = typer.Option(None),
-                   workers: int = typer.Option(None, help="parallel processes (default min(3, cpus))")):
-    """Analyse every sample, fix the crack threshold, fit baseline stats, centroids and signatures."""
+                   workers: int = typer.Option(None, help="parallel processes (default min(3, cpus))"),
+                   no_sim: bool = typer.Option(False, help="skip the Section 10 simulation layer")):
+    """Analyse every sample, fix the crack threshold, fit baseline stats, centroids, signatures (+ simulation layer)."""
     from .build import build_baseline as bb
 
-    bb(data, out, load_config(config), workers=workers)
+    bb(data, out, load_config(config), workers=workers, with_sim=not no_sim)
 
 
 @app.command()
@@ -138,7 +139,10 @@ def validate(data: Path = typer.Option(...), out: Path = typer.Option(Path("out"
     sens = None if skip_sensitivity else V.sensitivity(discover(data), df, base["stats"], cfg, log=typer.echo)
     synth = None if skip_synthetic else V.synthetic_checks(cfg, log=typer.echo)
     counts = df[df["batch"].isin(["1", "2", "3"])]["batch"].value_counts().to_dict()
-    V.write_validation_md(validation_md, loio, shadow, eff, sens, synth, counts, base["stats"], base["model"])
+    within = V.within_gate_separation(df)
+    abl = None if skip_sensitivity or not (out / "sim.csv").exists() else V.sim_ablations(discover(data), cfg, out, log=typer.echo)
+    extra = V.sim_validation_md(out, abl)
+    V.write_validation_md(validation_md, loio, shadow, eff, sens, synth, counts, base["stats"], base["model"], within, extra)
     if loio.get("table") is not None and len(loio["table"]):
         loio["table"].to_csv(out / "loio.csv", index=False)
     if sens is not None:
@@ -153,7 +157,7 @@ def regress(data: Path = typer.Option(Path("data")), out: Path = typer.Option(Pa
     from .build import build_baseline as bb
     from .regress import run
 
-    bb(data, out, load_config(config), workers=workers)
+    bb(data, out, load_config(config), workers=workers, with_sim=False)
     raise typer.Exit(run(out, accept, log=typer.echo))
 
 

@@ -84,7 +84,7 @@ def fit_from_results(results: list[SampleResult], cfg: dict, crack_threshold: fl
     return dict(df=df, stats=st, s_loo=s_loo, model=model)
 
 
-def build_baseline(data: Path, out: Path, cfg: dict, log=print, workers=None) -> dict:
+def build_baseline(data: Path, out: Path, cfg: dict, log=print, workers=None, with_sim: bool = True) -> dict:
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     samples = discover(data)
@@ -120,6 +120,10 @@ def build_baseline(data: Path, out: Path, cfg: dict, log=print, workers=None) ->
     figs.mkdir(exist_ok=True)
     report.fig_signatures(fit["model"]["signatures"], figs / "signatures.png")
     report.fig_kpi_boxplots(df_all[df_all["batch"].isin(["1", "2", "3"])], figs / "kpi_boxplots.png")
+    if with_sim and (cfg.get("sim") or {}).get("enabled"):
+        from .sim import baseline as sim_baseline
+
+        sim_baseline.run(samples, df_all, cfg, out, workers, log)
     if st["n"] < 3:
         log(f"WARNING: only {st['n']} baseline (batch 3) image(s); z-scores rely on within-image strip SE and the 5 % floor.")
     log(f"baseline version {st['version']}  n={st['n']}  crack threshold {thr:.4f}  Δ={st['delta']} T={st['T']}")
@@ -166,7 +170,19 @@ def evaluate_files(files: SampleFiles, base: dict, cfg: dict, report_dir: Path |
     g = stats_mod.gate_status(res.gates, st, cfg)
     a = assign_mod.assign(x, res.strips, model, st, cfg)
     elapsed = time.time() - t0
-    verdict_json = report.build_verdict_json(res, st, model, v, g, a, cfg, held_out_note, elapsed)
+    sim_block = None
+    sim_base_path = out / "sim_baseline.json"
+    if (cfg.get("sim") or {}).get("enabled") and sim_base_path.exists():
+        from .analyze import _unclean, analyze_sim
+        from .sim.run import relative
+
+        base_sim = _unclean(json.loads(sim_base_path.read_text()))
+        row = analyze_sim(files, cfg, cache)
+        rel = relative(row, x, base_sim, base_sim.get("base_kpi_median", {}), cfg, run_cell=True)
+        sim_block = dict(rel, row=row, baseline=dict(median=base_sim["median"], p10=base_sim["p10"], p90=base_sim["p90"],
+                                                     D_c_sweep=base_sim.get("D_c_sweep", {}), n=base_sim.get("n")))
+    elapsed = time.time() - t0
+    verdict_json = report.build_verdict_json(res, st, model, v, g, a, cfg, held_out_note, elapsed, sim_block)
     if report_dir:
         report.write_reports(verdict_json, res, st, model, base, Path(report_dir), cache / res.sample_id)
     log(f"{files.sample_id}: batch {a['assigned_batch']} p={a['probabilities'][a['assigned_batch']]:.2f} "
