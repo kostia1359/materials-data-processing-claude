@@ -16,9 +16,10 @@ confirms pore floors; InLens/ETD intensities are acquisition covariates ("gates"
 
 ```bash
 pip install -e .            # or: pip install numpy scipy scikit-image tifffile imagecodecs pandas scikit-learn matplotlib pyyaml typer tabulate pytest
-python -m qc fetch                                  # download the Drive folder listed in data/drive_manifest.csv (needs drive.google.com access)
+python -m qc fetch                                  # download the Drive folder in data/drive_manifest.csv (gdown; GOOGLE_API_KEY route optional); resumable, size-verified
 python -m qc quicklook --data data                  # composites + facts table per sample (re-verify DATA_FACTS.md)
-python -m qc build-baseline --data data --out out   # KPIs for every sample, baseline stats, centroids, signatures
+python -m qc build-baseline --data data --out out   # KPIs, baseline stats, centroids, signatures + simulation layer (--no-sim to skip)
+python -m qc regress --data data --out out          # Section 0.3 loop: recompute (cached) and compare with the last KPI snapshot
 python -m qc validate --data data --out out         # -> VALIDATION.md
 python -m qc evaluate --sample ./new/ --baseline out  # one sample -> out/reports/<id>/report.html (+ .md, verdict.json, dm.txt)
 ```
@@ -37,6 +38,24 @@ python -m qc score --predictions out/predictions.json --truth truth.csv   # appe
 ```
 
 `predictions.json` stores the baseline version hash and a UTC timestamp, so the morning score is a pre-registered test.
+
+## Development loop (brief §0.3)
+
+New triples are added to `data/` one or two at a time; `qc regress` recomputes only the cache stages whose code or
+config changed (`out/cache/<id>/{seg.npz,sato.npy,result.json,sim.json}` keyed by file SHA-1 + stage version) and
+fails if any KPI of an already-processed sample moves by ≥ 0.1 × its baseline scale (or ≥ 1 % for fractions). An
+intended change is accepted with `--accept` after writing the reason in `DECISIONS.md`; snapshots live in
+`out/snapshots/kpis_<n>.csv` (committed). It also flags KPIs outside the plausible ranges of §0.3.2.
+
+## Simulation layer (brief §10, `qc/sim/`)
+
+Additive, never feeds the classifier: an evidence-fused phase map (BSE + ETD, InLens only gates smoothing) with an
+explicit *uncertain* class → nested bound maps L_solid ⊆ L_mid ⊆ L_pore → ×4 block-majority maps (audited) →
+two-conductivity finite-volume Laplace solves (pore 1, carbon D_c = 0.05, Si 0; refuses non-spanning masks),
+electronic network, Si swelling scenarios (f_A 1.6 / 2.43), closed-form indices and a PyBaMM composite
+graphite–Si DFN (Chen2020_composite) under both porosity conventions. Everything is reported as a ratio to the
+baseline median with A/B/C trust grades and L_solid…L_pore bounds; outputs `out/sim.csv`, `out/sim_bounds.csv`,
+`out/sim_baseline.json` and a `simulation` block in every `verdict.json`.
 
 ## Outputs
 
@@ -74,7 +93,9 @@ Parameters live in `config.yaml`; every judgment call is in `DECISIONS.md`; veri
 
 ## Runtime
 
-~70 s per 7000 × 1904 sample on 4 CPU cores (Sato ridge filter ≈ 25 s of it). `build-baseline` runs 3 samples in
+KPI pipeline ≈ 50–70 s per 7000 × ~2000 sample on 4 CPU cores (Sato ridge filter ≈ 25 s of it); simulation layer
+≈ 60–100 s more (11 sparse solves on the ×4 map + PyBaMM ≈ 15 s). A full-resolution solve was measured at 354 s /
+7.8 GB, hence the audited ×4 path. `build-baseline` runs 3 samples in
 parallel (`--workers`, or `QC_WORKERS`); results are cached in `out/samples/<id>/` and reused when files are unchanged.
 `pytest` (14 tests, synthetic ground truth) takes ~3 min.
 

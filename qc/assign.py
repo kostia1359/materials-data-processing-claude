@@ -182,8 +182,11 @@ def assign(x: dict, strips: list[dict], model: dict, stats: dict, cfg: dict) -> 
 
 def batch_signatures(df: pd.DataFrame, stats: dict, cfg: dict) -> dict:
     """effect_bk = (median_b - baseline median)/scale for each non-baseline batch, with LOO sign stability."""
+    from .stats import baseline_stats
+
     out = {}
     lab = df[df["batch"].astype(str).isin(["1", "2", "3"])]
+    loo_stats = {sid: baseline_stats(lab, cfg, exclude=sid) for sid in lab["sample_id"]}
     for b in sorted(set(lab["batch"].astype(str)) - {"3"}):
         sub = lab[lab["batch"].astype(str) == b]
         effects = {}
@@ -199,9 +202,7 @@ def batch_signatures(df: pd.DataFrame, stats: dict, cfg: dict) -> dict:
             # LOO over all labelled images: drop each one, recompute baseline stats and batch median
             agree = []
             for sid in lab["sample_id"]:
-                from .stats import baseline_stats
-
-                st2 = baseline_stats(lab, cfg, exclude=sid)
+                st2 = loo_stats[sid]
                 s2 = st2["kpi"].get(k)
                 v2 = sub[sub["sample_id"] != sid][k].to_numpy(float)
                 v2 = v2[np.isfinite(v2)]
