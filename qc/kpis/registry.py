@@ -6,6 +6,8 @@ KPI_META = {
     "si_frac_solid": ("fraction", "M", "more Si-candidate in the solid: higher capacity but more swelling, first-cycle loss and N/P shift",
                       "less Si-candidate in the solid: lower capacity, less swelling", "Si loading"),
     "si_frac_total": ("fraction", "M", "more Si-candidate per image area", "less Si-candidate per image area", "Si loading"),
+    "si_bse_contrast": ("ratio", "M", "bright phase brighter in BSE relative to carbon: higher mean Z (closer to pure Si)",
+                        "bright phase darker in BSE relative to carbon: lower mean Z - consistent with SiOx or Si-C composite instead of Si (lower capacity per mass, lower swelling)", "Si loading"),
     "si_d50_aw_um": ("um", "R", "coarser Si-candidate (area-weighted D50): higher fracture and swelling risk, more particle isolation",
                      "finer Si-candidate: more surface/SEI, less fracture", "Si size"),
     "si_d90_aw_um": ("um", "R", "more coarse Si-candidate particles in the tail: fracture/swelling hot-spots",
